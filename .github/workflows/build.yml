@@ -1,0 +1,93 @@
+name: Build reMarkable Paper Pro
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: armv7-unknown-linux-gnueabihf
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-registry-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-registry-
+
+      - name: Cache Cargo target
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: cargo-target-arm-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-target-arm-
+
+      - name: Install Qt (host)
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y qt6-base-dev qt6-declarative-dev
+
+      # Native cargo check as an early gate — catches Rust compile errors quickly
+      # without waiting for the full cross-compilation pipeline.
+      - name: Check (native)
+        run: |
+          set -euo pipefail
+          export QMAKE=$(which qmake6 || which qmake)
+          cargo check
+
+      - name: Cache Yocto SDK
+        id: cache-sdk
+        uses: actions/cache@v4
+        with:
+          path: /opt/codex/rm-ferrari
+          key: remarkable-ferrari-sdk-4.0.813
+
+      - name: Install reMarkable Paper Pro SDK
+        if: steps.cache-sdk.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          wget -q https://storage.googleapis.com/remarkable-codex-toolchain/3.14.3.0/meta-toolchain-remarkable-4.0.813-ferrari-public-x86_64-toolchain.sh
+          echo "29e2cce4280dbde182937c9614681a59a14aca8a18e06957bf66f8aeb0f3b968  meta-toolchain-remarkable-4.0.813-ferrari-public-x86_64-toolchain.sh" | sha256sum -c
+          chmod +x meta-toolchain-remarkable-4.0.813-ferrari-public-x86_64-toolchain.sh
+          ./meta-toolchain-remarkable-4.0.813-ferrari-public-x86_64-toolchain.sh -y -d /opt/codex/rm-ferrari
+
+      # The SDK environment-setup script sets CC, CXX, PKG_CONFIG_PATH, and other
+      # cross-compilation variables. These do NOT persist between GitHub Actions steps
+      # (each `run:` block is a separate shell), so we source and build in one step.
+      - name: Cross-compile for reMarkable Paper Pro
+        run: |
+          set -euo pipefail
+          # Source the SDK environment — this sets CC, CXX, OECORE_* vars, etc.
+          source /opt/codex/rm-ferrari/*/environment-setup-*
+          # Point QMAKE and PKG_CONFIG at the SDK sysroot for cxx-qt-build
+          export QMAKE="$(which qmake)"
+          export PKG_CONFIG_PATH="$OECORE_PKGS_PATH"
+          export PKG_CONFIG_SYSROOT_DIR="$OECORE_TARGET_SYSROOT"
+          cargo build --release --target arm-remarkable-linux-gnueabihf
+        env:
+          CARGO_TARGET_ARM_REMARKABLE_LINUX_GNUEABIHF_LINKER: arm-remarkable-linux-gnueabihf-g++
+
+      - name: Package for AppLoad
+        run: |
+          set -euo pipefail
+          ./scripts/package.sh target/arm-remarkable-linux-gnueabihf/release/remailable
+
+      - name: Upload AppLoad package
+        uses: actions/upload-artifact@v4
+        with:
+          name: remailable-appload
+          path: build/remailable-appload.tar.gz
+          retention-days: 30
