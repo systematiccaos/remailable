@@ -6,7 +6,7 @@
 
 ## Phases
 
-- [ ] **Phase 1: Bootstrap & CI** — Project scaffolding, cross-compilation, AppLoad packaging, and GitHub Actions pipeline
+- [x] **Phase 1: Bootstrap & CI** — Project scaffolding, cross-compilation, AppLoad packaging, and GitHub Actions pipeline
 - [ ] **Phase 2: Connect & Sync** — IMAP/SMTP account setup, multi-account management, local sync, and offline access
 - [ ] **Phase 3: Read & View** — Folder navigation, email reading (plain + HTML), threads, search, and attachment handling
 - [ ] **Phase 4: Compose & Reply** — Writing and sending emails using the Type Folio keyboard
@@ -24,7 +24,7 @@
   4. The AppLoad package can be installed on a reMarkable Paper Pro and the app launches to a blank window
 **Plans**: 2 plans
 - [x] 01-01 — Scaffold Rust+Qt project with CXX-Qt and ARM cross-compilation config
-- [ ] 01-02 — AppLoad packaging scripts and GitHub Actions CI pipeline
+- [x] 01-02 — AppLoad packaging scripts and GitHub Actions CI pipeline
 
 ### Phase 2: Connect & Sync
 **Goal**: Users can configure email accounts and have emails synced locally for offline access
@@ -67,7 +67,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Bootstrap & CI | 0/2 | Planned | - |
+| 1. Bootstrap & CI | 2/2 | Complete | 2026-04-29 |
 | 2. Connect & Sync | 0/0 | Not started | - |
 | 3. Read & View | 0/0 | Not started | - |
 | 4. Compose & Reply | 0/0 | Not started | - |

@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-last_updated: "2026-04-29T18:29:55.525Z"
+status: completed
+last_updated: "2026-04-29T18:45:09.550Z"
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 1
-  percent: 50
+  completed_plans: 2
+  percent: 100
 ---
 
 # STATE: remailable
@@ -19,26 +19,28 @@ progress:
 ## Project Reference
 
 **Core Value:** Reading and replying to email on a reMarkable Paper Pro tablet, offline-first, with native-quality e-ink UX
-**Current Focus:** Phase 01 — bootstrap-ci
+**Current Focus:** Phase 01 — bootstrap-ci (COMPLETE)
 
 ## Current Position
 
-Phase: 01 (bootstrap-ci) — EXECUTING
-Plan: 2 of 2
+Phase: 01 (bootstrap-ci) — COMPLETE
+Plan: 2 of 2 (all done)
 **Phase:** 01 — Bootstrap & CI
-**Plan:** 01-01 (complete)
-**Status:** Executing Phase 01, Plan 01 done
-**Progress:** [█████░░░░░] 50%
+**Plan:** 01-02 (complete)
+**Status:** Phase 01 complete, ready for transition to Phase 02
+**Progress:** [██████████] 100%
 
 ## Performance Metrics
 
 | Metric | Value |
 |--------|-------|
-| Phases completed | 0 / 4 |
+| Phases completed | 1 / 4 |
 | Requirements shipped | 0 / 26 |
-| Plans executed | 1 |
-| Sessions on project | 2 |
+| Plans executed | 2 |
+| Sessions on project | 3 |
 | Phase 01-bootstrap-ci P01 | 14 min | 2 tasks | 11 files |
+| Phase 01-bootstrap-ci P02 | 7 min | 2 tasks | 6 files |
+| Phase 01-bootstrap-ci P02 | 7min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -51,12 +53,18 @@ Plan: 2 of 2
 - Plan 01-01: Used CXX-Qt 0.8 (not 0.7) with adapted API patterns
 - Plan 01-01: QML module URI is io.remailable.Remailable
 - Plan 01-01: Qt6 for local dev, Yocto SDK for target
-- [Phase 01-bootstrap-ci]: CXX-Qt 0.8 used instead of 0.7 — API adapted (extern RustQt, QmlModule)
+- Plan 01-02: AppLoad external app format with eglfs/KMS Qt platform
+- Plan 01-02: build-rcc.sh simplified to copy QML (CXX-Qt uses qrc bundling)
+- Plan 01-02: CI SDK environment sourced in single build step (no step persistence)
+- Plan 01-02: Native cargo check as early compile-error gate before cross-build
+- [Phase 01-bootstrap-ci]: AppLoad external app format with eglfs/KMS Qt platform for fullscreen e-ink rendering
+- [Phase 01-bootstrap-ci]: build-rcc.sh simplified to copy QML — CXX-Qt bundles QML via qrc, filesystem copy is for reference only
+- [Phase 01-bootstrap-ci]: CI SDK environment sourced in single build step (GitHub Actions starts new shell per step)
 
 ### Active Todos
 
 - [x] Plan 01-01: Project scaffold + ARM cross-compilation config
-- [ ] Plan 01-02: GitHub Actions CI pipeline
+- [x] Plan 01-02: GitHub Actions CI pipeline
 
 ### Blockers
 
@@ -64,6 +72,6 @@ Plan: 2 of 2
 
 ## Session Continuity
 
-**Last action:** Completed 01-01-PLAN.md (project scaffold)
-**Next step:** Execute 01-02-PLAN.md (CI pipeline)
-**Carry-forward:** CXX-Qt 0.8 API (not 0.7), Qt 6 for local dev, AppLoad external format, Yocto SDK cross-compilation, io.remailable.Remailable QML module URI
+**Last action:** Completed 01-02-PLAN.md (CI pipeline and AppLoad packaging)
+**Next step:** Transition to Phase 02 (Connect & Sync)
+**Carry-forward:** CXX-Qt 0.8 API, Qt 6 for local dev, AppLoad external format, Yocto SDK cross-compilation, io.remailable.Remailable QML module URI, eglfs/KMS platform for Paper Pro, CI pipeline with SDK caching
