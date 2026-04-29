@@ -37,7 +37,7 @@
   4. User can browse and read cached emails while offline (no network)
   5. App displays sync status (syncing / synced / offline) to the user
 **Plans**: 3 plans
-- [ ] 02-01 — Account data model, IMAP/SMTP connection validation, and SQLite storage
+- [x] 02-01 — Account data model, IMAP/SMTP connection validation, and SQLite storage
 - [ ] 02-02 — Email sync engine with incremental sync and offline storage
 - [ ] 02-03 — CXX-Qt bridge, QML account management UI, and sync status indicator
 **UI hint**: yes
