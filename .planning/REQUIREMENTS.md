@@ -40,9 +40,9 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Offline & Sync
 
 - [x] **OFFL-01**: Emails are cached locally for offline reading when previously synced
-- [ ] **OFFL-02**: App syncs emails from the server when network becomes available
+- [x] **OFFL-02**: App syncs emails from the server when network becomes available
 - [ ] **OFFL-03**: App indicates sync status (syncing, synced, offline) to the user
-- [ ] **OFFL-04**: User can browse and read cached emails while offline
+- [x] **OFFL-04**: User can browse and read cached emails while offline
 
 ### Deployment
 
@@ -110,9 +110,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CONN-04 | Phase 2 | Pending |
 | CONN-05 | Phase 2 | Complete |
 | OFFL-01 | Phase 2 | Complete |
-| OFFL-02 | Phase 2 | Pending |
+| OFFL-02 | Phase 2 | Complete |
 | OFFL-03 | Phase 2 | Pending |
-| OFFL-04 | Phase 2 | Pending |
+| OFFL-04 | Phase 2 | Complete |
 | READ-01 | Phase 3 | Pending |
 | READ-02 | Phase 3 | Pending |
 | READ-03 | Phase 3 | Pending |

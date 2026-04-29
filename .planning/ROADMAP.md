@@ -38,7 +38,7 @@
   5. App displays sync status (syncing / synced / offline) to the user
 **Plans**: 3 plans
 - [x] 02-01 — Account data model, IMAP/SMTP connection validation, and SQLite storage
-- [ ] 02-02 — Email sync engine with incremental sync and offline storage
+- [x] 02-02 — Email sync engine with incremental sync and offline storage
 - [ ] 02-03 — CXX-Qt bridge, QML account management UI, and sync status indicator
 **UI hint**: yes
 
