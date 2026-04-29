@@ -1,0 +1,137 @@
+# Requirements: remailable
+
+**Defined:** 2026-04-29
+**Core Value:** Reading and replying to email on a reMarkable Paper Pro tablet, offline-first, with native-quality e-ink UX
+
+## v1 Requirements
+
+Requirements for initial release. Each maps to roadmap phases.
+
+### Email Connectivity
+
+- [ ] **CONN-01**: User can connect to an IMAP server using hostname, port, username, and password
+- [ ] **CONN-02**: User can send emails via SMTP with the same credentials
+- [ ] **CONN-03**: User can configure and switch between multiple email accounts
+- [ ] **CONN-04**: User can add and remove email accounts through a settings UI
+- [ ] **CONN-05**: App validates IMAP/SMTP connection settings before saving
+
+### Email Reading
+
+- [ ] **READ-01**: User can list and navigate email folders (inbox, sent, drafts, trash, custom)
+- [ ] **READ-02**: User can view an email list with subject, sender, and date
+- [ ] **READ-03**: User can read plain text email bodies
+- [ ] **READ-04**: User can read HTML email bodies rendered in an e-ink-friendly way
+- [ ] **READ-05**: User can see read/unread status on emails and it syncs with the server
+- [ ] **READ-06**: User can view emails grouped into conversation threads
+- [ ] **READ-07**: User can search emails by subject and sender
+
+### Email Composition
+
+- [ ] **COMP-01**: User can compose a new email using the Type Folio / system keyboard
+- [ ] **COMP-02**: User can reply to an existing email
+- [ ] **COMP-03**: User can specify recipient (To), subject, and body for outgoing emails
+
+### Attachments
+
+- [ ] **ATCH-01**: User can see a list of attachments on an email with filename and size
+- [ ] **ATCH-02**: User can download attachments to the device
+- [ ] **ATCH-03**: User can view PDF attachments inline using the reMarkable's display
+
+### Offline & Sync
+
+- [ ] **OFFL-01**: Emails are cached locally for offline reading when previously synced
+- [ ] **OFFL-02**: App syncs emails from the server when network becomes available
+- [ ] **OFFL-03**: App indicates sync status (syncing, synced, offline) to the user
+- [ ] **OFFL-04**: User can browse and read cached emails while offline
+
+### Deployment
+
+- [ ] **DEPL-01**: App is packaged in AppLoad-compatible format for reMarkable Paper Pro
+- [ ] **DEPL-02**: GitHub Actions workflow builds the project on push to main
+- [ ] **DEPL-03**: Cross-compilation for reMarkable's ARM target is configured in CI
+- [ ] **DEPL-04**: Build artifacts (AppLoad package) are available as CI output
+
+## v2 Requirements
+
+### Email Composition (Extended)
+
+- **COMP-04**: User can forward emails to other recipients
+- **COMP-05**: User can add CC and BCC fields to outgoing emails
+- **COMP-06**: User can save emails as drafts before sending
+
+### Attachments (Extended)
+
+- **ATCH-04**: User can view image attachments inline in the email view
+- **ATCH-05**: User can attach files to outgoing emails
+
+### Authentication
+
+- **AUTH-01**: User can authenticate via OAuth2 with Gmail
+- **AUTH-02**: User can authenticate via OAuth2 with Outlook
+
+### Connectivity (Extended)
+
+- **CONN-06**: App receives push email notifications via IMAP IDLE
+
+### Offline (Extended)
+
+- **OFFL-05**: User can flag/star emails offline and sync flags when online
+- **OFFL-06**: App performs background sync while open and connected
+
+### Deployment (Extended)
+
+- **DEPL-05**: Auto-release on tag push
+- **DEPL-06**: CI cross-compilation caching for faster builds
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| PGP/encrypted email | Significant complexity, not needed for v1 |
+| Calendar/contacts integration | Separate concern outside email client scope |
+| Push notifications | reMarkable doesn't support background app notifications well |
+| On-screen virtual keyboard | Composition limited to Type Folio / system keyboard |
+| Rich text/HTML composing | Plain text sufficient for e-ink context |
+| Full-text search index | Basic search suffices for v1; full-text index is heavy for embedded device |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| CONN-01 | — | Pending |
+| CONN-02 | — | Pending |
+| CONN-03 | — | Pending |
+| CONN-04 | — | Pending |
+| CONN-05 | — | Pending |
+| READ-01 | — | Pending |
+| READ-02 | — | Pending |
+| READ-03 | — | Pending |
+| READ-04 | — | Pending |
+| READ-05 | — | Pending |
+| READ-06 | — | Pending |
+| READ-07 | — | Pending |
+| COMP-01 | — | Pending |
+| COMP-02 | — | Pending |
+| COMP-03 | — | Pending |
+| ATCH-01 | — | Pending |
+| ATCH-02 | — | Pending |
+| ATCH-03 | — | Pending |
+| OFFL-01 | — | Pending |
+| OFFL-02 | — | Pending |
+| OFFL-03 | — | Pending |
+| OFFL-04 | — | Pending |
+| DEPL-01 | — | Pending |
+| DEPL-02 | — | Pending |
+| DEPL-03 | — | Pending |
+| DEPL-04 | — | Pending |
+
+**Coverage:**
+- v1 requirements: 26 total
+- Mapped to phases: 0
+- Unmapped: 26 ⚠️
+
+---
+*Requirements defined: 2026-04-29*
+*Last updated: 2026-04-29 after initial definition*
