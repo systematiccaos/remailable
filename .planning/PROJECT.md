@@ -14,10 +14,14 @@ Reading and replying to email on a reMarkable Paper Pro tablet, offline-first, w
 
 - ✓ Deploy as a standalone app via AppLoad on reMarkable Paper Pro — Validated in Phase 1: Bootstrap & CI
 - ✓ Build and package via GitHub Actions (build on push to main) — Validated in Phase 1: Bootstrap & CI
+- ✓ Connect to IMAP/SMTP server with validation — Validated in Phase 2: Connect & Sync
+- ✓ Multiple account configuration and management — Validated in Phase 2: Connect & Sync
+- ✓ Local email storage for offline access — Validated in Phase 2: Connect & Sync
+- ✓ Email sync with incremental updates — Validated in Phase 2: Connect & Sync
+- ✓ Sync status indicator — Validated in Phase 2: Connect & Sync
 
 ### Active
 
-- [ ] Connect to multiple IMAP accounts and sync emails locally for offline reading
 - [ ] Browse and read emails with a full-featured folder-based layout
 - [ ] Compose new emails and reply using the reMarkable Type Folio / system keyboard
 - [ ] Send emails via SMTP for each configured account
@@ -55,9 +59,9 @@ Reading and replying to email on a reMarkable Paper Pro tablet, offline-first, w
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Rust + Qt/QML | Rust for safety/performance on embedded Linux; Qt for native reMarkable UI patterns | ✓ Good |
-| Local-first storage | reMarkable is frequently offline; emails must be accessible without network | — Pending |
+| Local-first storage | reMarkable is frequently offline; emails must be accessible without network | ✓ Good |
 | Type Folio for composition | No on-screen keyboard; reMarkable's Type Folio is the natural input method | — Pending |
-| Multiple accounts from v1 | User needs more than one email account | — Pending |
+| Multiple accounts from v1 | User needs more than one email account | ✓ Good |
 | AppLoad deployment | Standard mechanism for sideloading custom apps on reMarkable | ✓ Good |
 | GitHub Actions build-on-push | Simple CI; manual release keeps control over what ships | ✓ Good |
 
@@ -79,4 +83,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-29 after Phase 1 completion*
+*Last updated: 2026-04-29 after Phase 2 completion*
