@@ -12,7 +12,8 @@ Reading and replying to email on a reMarkable Paper Pro tablet, offline-first, w
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Deploy as a standalone app via AppLoad on reMarkable Paper Pro — Validated in Phase 1: Bootstrap & CI
+- ✓ Build and package via GitHub Actions (build on push to main) — Validated in Phase 1: Bootstrap & CI
 
 ### Active
 
@@ -21,8 +22,6 @@ Reading and replying to email on a reMarkable Paper Pro tablet, offline-first, w
 - [ ] Compose new emails and reply using the reMarkable Type Folio / system keyboard
 - [ ] Send emails via SMTP for each configured account
 - [ ] Render PDF and image attachments inline, leveraging reMarkable's display strengths
-- [ ] Deploy as a standalone app via AppLoad on reMarkable Paper Pro
-- [ ] Build and package via GitHub Actions (build on push to main)
 
 ### Out of Scope
 
@@ -55,12 +54,12 @@ Reading and replying to email on a reMarkable Paper Pro tablet, offline-first, w
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Rust + Qt/QML | Rust for safety/performance on embedded Linux; Qt for native reMarkable UI patterns | — Pending |
+| Rust + Qt/QML | Rust for safety/performance on embedded Linux; Qt for native reMarkable UI patterns | ✓ Good |
 | Local-first storage | reMarkable is frequently offline; emails must be accessible without network | — Pending |
 | Type Folio for composition | No on-screen keyboard; reMarkable's Type Folio is the natural input method | — Pending |
 | Multiple accounts from v1 | User needs more than one email account | — Pending |
-| AppLoad deployment | Standard mechanism for sideloading custom apps on reMarkable | — Pending |
-| GitHub Actions build-on-push | Simple CI; manual release keeps control over what ships | — Pending |
+| AppLoad deployment | Standard mechanism for sideloading custom apps on reMarkable | ✓ Good |
+| GitHub Actions build-on-push | Simple CI; manual release keeps control over what ships | ✓ Good |
 
 ## Evolution
 
@@ -80,4 +79,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-29 after initialization*
+*Last updated: 2026-04-29 after Phase 1 completion*
