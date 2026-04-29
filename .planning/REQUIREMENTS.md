@@ -46,9 +46,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Deployment
 
-- [ ] **DEPL-01**: App is packaged in AppLoad-compatible format for reMarkable Paper Pro
+- [x] **DEPL-01**: App is packaged in AppLoad-compatible format for reMarkable Paper Pro
 - [ ] **DEPL-02**: GitHub Actions workflow builds the project on push to main
-- [ ] **DEPL-03**: Cross-compilation for reMarkable's ARM target is configured in CI
+- [x] **DEPL-03**: Cross-compilation for reMarkable's ARM target is configured in CI
 - [ ] **DEPL-04**: Build artifacts (AppLoad package) are available as CI output
 
 ## v2 Requirements
@@ -100,9 +100,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEPL-01 | Phase 1 | Pending |
+| DEPL-01 | Phase 1 | Complete |
 | DEPL-02 | Phase 1 | Pending |
-| DEPL-03 | Phase 1 | Pending |
+| DEPL-03 | Phase 1 | Complete |
 | DEPL-04 | Phase 1 | Pending |
 | CONN-01 | Phase 2 | Pending |
 | CONN-02 | Phase 2 | Pending |

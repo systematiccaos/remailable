@@ -23,7 +23,7 @@
   3. The CI pipeline produces an AppLoad-compatible package as a build artifact
   4. The AppLoad package can be installed on a reMarkable Paper Pro and the app launches to a blank window
 **Plans**: 2 plans
-- [ ] 01-01 — Scaffold Rust+Qt project with CXX-Qt and ARM cross-compilation config
+- [x] 01-01 — Scaffold Rust+Qt project with CXX-Qt and ARM cross-compilation config
 - [ ] 01-02 — AppLoad packaging scripts and GitHub Actions CI pipeline
 
 ### Phase 2: Connect & Sync
