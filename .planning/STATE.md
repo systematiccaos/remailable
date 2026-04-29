@@ -5,13 +5,13 @@
 ## Project Reference
 
 **Core Value:** Reading and replying to email on a reMarkable Paper Pro tablet, offline-first, with native-quality e-ink UX
-**Current Focus:** Getting the project bootstrapped — build system, cross-compilation, and CI pipeline
+**Current Focus:** Phase 1 — Bootstrap & CI (context gathered)
 
 ## Current Position
 
 **Phase:** 1 — Bootstrap & CI
 **Plan:** —
-**Status:** Not started
+**Status:** Context gathered, ready for planning
 **Progress:** ░░░░░░░░░░ 0%
 
 ## Performance Metrics
@@ -21,21 +21,24 @@
 | Phases completed | 0 / 4 |
 | Requirements shipped | 0 / 26 |
 | Plans executed | 0 |
-| Sessions on project | 1 |
+| Sessions on project | 2 |
 
 ## Accumulated Context
 
 ### Decisions
-- (none yet)
+- Phase 1: Yocto SDK for cross-compilation (official reMarkable toolchain)
+- Phase 1: Dynamic Qt linking against SDK sysroot libraries
+- Phase 1: CI installs SDK via shell step with caching
+- Phase 1: Custom Cargo target config (.cargo/config.toml) for cross-compilation
 
 ### Active Todos
-- [ ] Start Phase 1: Bootstrap & CI
+- [ ] Plan Phase 1: Bootstrap & CI
 
 ### Blockers
 - (none)
 
 ## Session Continuity
 
-**Last action:** Roadmap created (2026-04-29)
-**Next step:** `/gsd-plan-phase 1` to create the first plan
-**Carry-forward:** Project is greenfield — Phase 1 needs Rust+Qt project scaffolding, cross-compilation toolchain setup, and AppLoad packaging format investigation
+**Last action:** Phase 1 context gathered (2026-04-29)
+**Next step:** `/gsd-plan-phase 1` to create the plan
+**Carry-forward:** Key decisions locked — Yocto SDK, sysroot Qt linking, CI-installed SDK, custom Cargo target. Agent discretion on crate structure, Rust-Qt binding choice, and AppLoad packaging format.
