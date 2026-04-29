@@ -11,8 +11,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **CONN-01**: User can connect to an IMAP server using hostname, port, username, and password
 - [x] **CONN-02**: User can send emails via SMTP with the same credentials
-- [ ] **CONN-03**: User can configure and switch between multiple email accounts
-- [ ] **CONN-04**: User can add and remove email accounts through a settings UI
+- [x] **CONN-03**: User can configure and switch between multiple email accounts
+- [x] **CONN-04**: User can add and remove email accounts through a settings UI
 - [x] **CONN-05**: App validates IMAP/SMTP connection settings before saving
 
 ### Email Reading
@@ -41,7 +41,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **OFFL-01**: Emails are cached locally for offline reading when previously synced
 - [x] **OFFL-02**: App syncs emails from the server when network becomes available
-- [ ] **OFFL-03**: App indicates sync status (syncing, synced, offline) to the user
+- [x] **OFFL-03**: App indicates sync status (syncing, synced, offline) to the user
 - [x] **OFFL-04**: User can browse and read cached emails while offline
 
 ### Deployment
@@ -106,12 +106,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEPL-04 | Phase 1 | Complete |
 | CONN-01 | Phase 2 | Complete |
 | CONN-02 | Phase 2 | Complete |
-| CONN-03 | Phase 2 | Pending |
-| CONN-04 | Phase 2 | Pending |
+| CONN-03 | Phase 2 | Complete |
+| CONN-04 | Phase 2 | Complete |
 | CONN-05 | Phase 2 | Complete |
 | OFFL-01 | Phase 2 | Complete |
 | OFFL-02 | Phase 2 | Complete |
-| OFFL-03 | Phase 2 | Pending |
+| OFFL-03 | Phase 2 | Complete |
 | OFFL-04 | Phase 2 | Complete |
 | READ-01 | Phase 3 | Pending |
 | READ-02 | Phase 3 | Pending |

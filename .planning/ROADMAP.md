@@ -7,7 +7,7 @@
 ## Phases
 
 - [x] **Phase 1: Bootstrap & CI** — Project scaffolding, cross-compilation, AppLoad packaging, and GitHub Actions pipeline
-- [ ] **Phase 2: Connect & Sync** — IMAP/SMTP account setup, multi-account management, local sync, and offline access
+- [x] **Phase 2: Connect & Sync** — IMAP/SMTP account setup, multi-account management, local sync, and offline access
 - [ ] **Phase 3: Read & View** — Folder navigation, email reading (plain + HTML), threads, search, and attachment handling
 - [ ] **Phase 4: Compose & Reply** — Writing and sending emails using the Type Folio keyboard
 
@@ -39,7 +39,7 @@
 **Plans**: 3 plans
 - [x] 02-01 — Account data model, IMAP/SMTP connection validation, and SQLite storage
 - [x] 02-02 — Email sync engine with incremental sync and offline storage
-- [ ] 02-03 — CXX-Qt bridge, QML account management UI, and sync status indicator
+- [x] 02-03 — CXX-Qt bridge, QML account management UI, and sync status indicator
 **UI hint**: yes
 
 ### Phase 3: Read & View
@@ -71,6 +71,6 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Bootstrap & CI | 2/2 | Complete | 2026-04-29 |
-| 2. Connect & Sync | 0/3 | In planning | - |
+| 2. Connect & Sync | 3/3 | Complete | 2026-04-29 |
 | 3. Read & View | 0/0 | Not started | - |
 | 4. Compose & Reply | 0/0 | Not started | - |

@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-last_updated: "2026-04-29T21:21:11Z"
+status: completed
+last_updated: "2026-04-29T21:52:02.901Z"
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
 ---
 
 # STATE: remailable
@@ -18,28 +18,30 @@ progress:
 ## Project Reference
 
 **Core Value:** Reading and replying to email on a reMarkable Paper Pro tablet, offline-first, with native-quality e-ink UX
-**Current Focus:** Phase 02 — connect-sync
+**Current Focus:** Phase 02 — connect-sync COMPLETE
 
 ## Current Position
 
-Phase: 02 (connect-sync) — EXECUTING
-Plan: 3 of 3
+Phase: 02 (connect-sync) — COMPLETE
+Plan: 3 of 3 (all done)
 **Phase:** 2
-**Plan:** 02-02 completed
-**Status:** Executing Phase 02, Plan 02-02 done
+**Plan:** 02-03 completed
+**Status:** Phase 02 complete — ready for Phase 03 transition
 
 ## Performance Metrics
 
 | Metric | Value |
 |--------|-------|
-| Phases completed | 1 / 4 |
-| Requirements shipped | 3 / 26 |
-| Plans executed | 4 |
-| Sessions on project | 5 |
+| Phases completed | 2 / 4 |
+| Requirements shipped | 6 / 26 |
+| Plans executed | 5 |
+| Sessions on project | 6 |
 | Phase 01-bootstrap-ci P01 | 14 min | 2 tasks | 11 files |
 | Phase 01-bootstrap-ci P02 | 7 min | 2 tasks | 6 files |
 | Phase 02-connect-sync P01 | 18 min | 2 tasks | 6 files |
 | Phase 02-connect-sync P02 | 16 min | 2 tasks | 4 files |
+| Phase 02-connect-sync P03 | 12 min | 2 tasks | 9 files |
+| Phase 02 P03 | 12min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -62,6 +64,14 @@ Plan: 3 of 3
 - Plan 02-02: EmailMetadata in account.rs (not separate file) for simpler CXX-Qt bridge import
 - Plan 02-02: Email bodies as files on disk, not SQLite BLOBs — keeps DB small
 - Plan 02-02: Incremental UID-range sync (1:* first, N+1:* subsequent)
+- Plan 02-03: CXX-Qt 0.8 qproperty uses QString backing fields (not String)
+- Plan 02-03: Lazy<Mutex<Storage>> global for bridge access (not Rc<RefCell<Storage>>)
+- Plan 02-03: Index-based get_account_* invokables instead of QAbstractListModel for v1
+- Plan 02-03: Synchronous validation on main thread (background threading needed later)
+- Plan 02-03: Loader source switching for navigation (not StackView)
+- [Phase 02]: CXX-Qt 0.8 qproperty uses QString backing fields (not String)
+- [Phase 02]: Lazy<Mutex<Storage>> global for bridge access
+- [Phase 02]: Index-based get_account_* invokables for v1 QML model access
 
 ### Active Todos
 
@@ -69,6 +79,7 @@ Plan: 3 of 3
 - [x] Plan 01-02: GitHub Actions CI pipeline
 - [x] Plan 02-01: Account model, SQLite storage, IMAP/SMTP connection validation
 - [x] Plan 02-02: Sync engine with incremental IMAP email sync to local storage
+- [x] Plan 02-03: CXX-Qt bridge and QML UI for account management and sync status
 
 ### Blockers
 
@@ -76,6 +87,6 @@ Plan: 3 of 3
 
 ## Session Continuity
 
-**Last action:** Completed 02-02-PLAN.md (sync engine with incremental IMAP email sync)
-**Next step:** Plan 02-03 (final phase 02 plan)
-**Carry-forward:** CXX-Qt 0.8 API, Qt 6 for local dev, AppLoad external format, Yocto SDK cross-compilation, io.remailable.Remailable QML module URI, eglfs/KMS platform for Paper Pro, CI pipeline with SDK caching, AccountConfig data model, EmailMetadata struct, Storage SQLite layer with email CRUD, ConnectionResult enum, SyncEngine with incremental sync, validate_imap/validate_smtp, fetch_folders/fetch_message_headers/fetch_message_body, QMAKE override for local builds
+**Last action:** Completed 02-03-PLAN.md (CXX-Qt bridge + QML settings UI)
+**Next step:** Phase 03 transition (email browsing and reading)
+**Carry-forward:** CXX-Qt 0.8 API with qproperty(QString), Qt 6 for local dev, AppLoad external format, Yocto SDK cross-compilation, io.remailable.Remailable QML module URI, eglfs/KMS platform for Paper Pro, CI pipeline with SDK caching, AccountConfig data model, EmailMetadata struct, Storage SQLite layer with email CRUD, ConnectionResult enum, SyncEngine with incremental sync, validate_imap/validate_smtp, fetch_folders/fetch_message_headers/fetch_message_body, QMAKE override for local builds, Lazy<Mutex<Storage>> bridge pattern, AppModel + AccountListModel QObjects, index-based QML access, Loader navigation pattern
