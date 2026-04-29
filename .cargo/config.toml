@@ -1,0 +1,35 @@
+# Cross-compilation configuration for reMarkable Paper Pro
+#
+# This config is used when building for the reMarkable Paper Pro (codename: ferrari).
+# It points to the Yocto SDK's cross-compiler and sysroot for ARM target.
+#
+# SDK Setup:
+# 1. Download and install the reMarkable Yocto SDK:
+#    https://storage.googleapis.com/remarkable-codex-toolchain/3.14.3.0/meta-toolchain-remarkable-4.0.813-ferrari-public-x86_64-toolchain.sh
+# 2. Run the installer: sh meta-toolchain-remarkable-4.0.813-ferrari-public-x86_64-toolchain.sh
+# 3. Source the environment script before building:
+#    source /opt/codex/rm-ferrari/4.0.813/environment-setup-cortexa72-crypto-remarkable-linux-gnueabi
+# 4. Then build with: cargo build --target arm-remarkable-linux-gnueabihf
+#
+# The default install path is /opt/codex/rm-ferrari/4.0.813/ but can be changed
+# during SDK installation. Adjust the paths below if you installed elsewhere.
+#
+# CI: GitHub Actions installs the SDK automatically (see .github/workflows/).
+
+[target.arm-remarkable-linux-gnueabihf]
+linker = "arm-remarkable-linux-gnueabihf-g++"
+
+# Sysroot and library paths — these tell the linker where to find the Yocto SDK's
+# Qt and system libraries for the ARM target.
+rustflags = [
+  "-C", "link-arg=--sysroot=/opt/codex/rm-ferrari/4.0.813/sysroots/cortexa72-crypto-remarkable-linux-gnueabi",
+  "-C", "link-arg=-L/opt/codex/rm-ferrari/4.0.813/sysroots/cortexa72-crypto-remarkable-linux-gnueabi/usr/lib",
+  "-C", "link-arg=-L/opt/codex/rm-ferrari/4.0.813/sysroots/cortexa72-crypto-remarkable-linux-gnueabi/lib",
+]
+
+[env]
+# QMAKE must point to the SDK's qmake binary so cxx-qt-build can find Qt headers/libs.
+QMAKE = "/opt/codex/rm-ferrari/4.0.813/sysroots/cortexa72-crypto-remarkable-linux-gnueabi/usr/bin/qmake"
+# PKG_CONFIG paths ensure build scripts find the right .pc files for the ARM target.
+PKG_CONFIG_PATH = "/opt/codex/rm-ferrari/4.0.813/sysroots/cortexa72-crypto-remarkable-linux-gnueabi/usr/lib/pkgconfig:/opt/codex/rm-ferrari/4.0.813/sysroots/cortexa72-crypto-remarkable-linux-gnueabi/usr/share/pkgconfig"
+PKG_CONFIG_SYSROOT_DIR = "/opt/codex/rm-ferrari/4.0.813/sysroots/cortexa72-crypto-remarkable-linux-gnueabi"
