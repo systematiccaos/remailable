@@ -1,0 +1,5 @@
+/target
+*.pro.user
+*.rcc
+/build
+.qmlls.ini
