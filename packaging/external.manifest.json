@@ -1,0 +1,11 @@
+{
+  "name": "remailable",
+  "application": "./remailable",
+  "workingDirectory": ".",
+  "environment": {
+    "QT_QPA_PLATFORM": "eglfs",
+    "QT_QPA_EGLFS_INTEGRATION": "eglfs_kms"
+  },
+  "aspectRatio": "original",
+  "disablesWindowedMode": true
+}

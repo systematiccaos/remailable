@@ -2,4 +2,5 @@
 *.pro.user
 *.rcc
 /build
+*.tar.gz
 .qmlls.ini
