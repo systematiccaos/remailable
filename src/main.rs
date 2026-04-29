@@ -1,6 +1,8 @@
 pub mod cxxqt;
 pub mod account;
 pub mod storage;
+pub mod imap_conn;
+pub mod smtp_conn;
 
 use cxx_qt::casting::Upcast;
 use cxx_qt_lib::{QGuiApplication, QQmlApplicationEngine, QQmlEngine, QUrl};
