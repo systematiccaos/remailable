@@ -36,7 +36,10 @@
   3. Emails from all configured accounts sync to local storage when network is available
   4. User can browse and read cached emails while offline (no network)
   5. App displays sync status (syncing / synced / offline) to the user
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 02-01 — Account data model, IMAP/SMTP connection validation, and SQLite storage
+- [ ] 02-02 — Email sync engine with incremental sync and offline storage
+- [ ] 02-03 — CXX-Qt bridge, QML account management UI, and sync status indicator
 **UI hint**: yes
 
 ### Phase 3: Read & View
@@ -68,6 +71,6 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Bootstrap & CI | 2/2 | Complete | 2026-04-29 |
-| 2. Connect & Sync | 0/0 | Not started | - |
+| 2. Connect & Sync | 0/3 | In planning | - |
 | 3. Read & View | 0/0 | Not started | - |
 | 4. Compose & Reply | 0/0 | Not started | - |
