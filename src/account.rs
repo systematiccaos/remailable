@@ -1,5 +1,20 @@
 use serde::{Deserialize, Serialize};
 
+/// Email metadata stored locally for offline access.
+/// The email body is stored separately (body_path) for size efficiency.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EmailMetadata {
+    pub id: String,           // UUID v4
+    pub account_id: String,  // Foreign key to AccountConfig.id
+    pub folder: String,       // IMAP folder name (e.g., "INBOX", "Sent")
+    pub uid: u32,            // IMAP UID (unique within folder+account)
+    pub subject: String,
+    pub from_addr: String,
+    pub date: String,        // ISO 8601 or IMAP date format
+    pub read: bool,
+    pub body_path: String,   // Path to locally stored email body file
+}
+
 /// Full account configuration including IMAP and SMTP settings.
 /// This is what the user provides when adding an account.
 #[derive(Debug, Clone, Serialize, Deserialize)]

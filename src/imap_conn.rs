@@ -1,5 +1,5 @@
 use native_tls::TlsConnector;
-use crate::account::AccountConfig;
+use crate::account::{AccountConfig, EmailMetadata};
 
 /// Result of a connection validation attempt.
 #[derive(Debug)]
@@ -66,6 +66,100 @@ pub fn connect_imap(config: &AccountConfig) -> Result<imap::Session<native_tls::
         })
 }
 
+/// Fetch the list of folders from the IMAP server.
+/// Returns a Vec of folder names (e.g., ["INBOX", "Sent", "Drafts", "Trash"]).
+pub fn fetch_folders(
+    session: &mut imap::Session<native_tls::TlsStream<std::net::TcpStream>>,
+) -> Result<Vec<String>, String> {
+    let list = session.list(Some(""), Some("*"))
+        .map_err(|e| format!("IMAP LIST failed: {}", e))?;
+    let folders: Vec<String> = list.iter()
+        .map(|name| name.name().to_string())
+        .collect();
+    Ok(folders)
+}
+
+/// Fetch message UIDs and headers from a specific IMAP folder.
+/// Returns a Vec of EmailMetadata with uid, subject, from, date populated.
+/// body_path and id are set later by the sync engine when saving.
+pub fn fetch_message_headers(
+    session: &mut imap::Session<native_tls::TlsStream<std::net::TcpStream>>,
+    folder: &str,
+    account_id: &str,
+) -> Result<Vec<EmailMetadata>, String> {
+    session.select(folder)
+        .map_err(|e| format!("IMAP SELECT {} failed: {}", folder, e))?;
+
+    // Fetch all message UIDs with ENVELOPE (subject, from, date) and FLAGS
+    let messages = session.uid_fetch("1:*", "(UID ENVELOPE FLAGS)")
+        .map_err(|e| format!("IMAP FETCH failed on {}: {}", folder, e))?;
+
+    let mut results = Vec::new();
+    for msg in messages.iter() {
+        let uid = msg.uid.unwrap_or(0);
+        if uid == 0 { continue; }
+
+        // envelope() returns Option<&Envelope> — extract fields if present
+        let envelope = match msg.envelope() {
+            Some(env) => env,
+            None => continue, // skip messages without envelope
+        };
+
+        let subject = envelope.subject
+            .and_then(|s| std::str::from_utf8(s).ok())
+            .unwrap_or("(no subject)")
+            .to_string();
+
+        let from_addr = envelope.from
+            .as_ref()
+            .and_then(|f| f.first())
+            .and_then(|addr| addr.mailbox.as_ref())
+            .and_then(|m| std::str::from_utf8(m).ok())
+            .unwrap_or("(unknown)")
+            .to_string();
+
+        let date = envelope.date
+            .and_then(|d| std::str::from_utf8(d).ok())
+            .unwrap_or("")
+            .to_string();
+
+        let read = msg.flags().iter().any(|f| *f == imap::types::Flag::Seen);
+
+        results.push(EmailMetadata {
+            id: String::new(),        // Set by sync engine (UUID)
+            account_id: account_id.to_string(),
+            folder: folder.to_string(),
+            uid,
+            subject,
+            from_addr,
+            date,
+            read,
+            body_path: String::new(), // Set by sync engine after saving body
+        });
+    }
+
+    Ok(results)
+}
+
+/// Fetch the full body (RFC822.TEXT) of a specific message by UID.
+/// Returns the body as a String.
+pub fn fetch_message_body(
+    session: &mut imap::Session<native_tls::TlsStream<std::net::TcpStream>>,
+    uid: u32,
+) -> Result<String, String> {
+    let messages = session.uid_fetch(
+        uid.to_string().as_str(),
+        "RFC822.TEXT"
+    ).map_err(|e| format!("IMAP FETCH body for UID {} failed: {}", uid, e))?;
+
+    let msg = messages.iter().next()
+        .ok_or_else(|| format!("No message found for UID {}", uid))?;
+
+    msg.body()
+        .map(|bytes| String::from_utf8_lossy(bytes).to_string())
+        .ok_or_else(|| format!("No body in message UID {}", uid))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -93,6 +187,32 @@ mod tests {
             ConnectionResult::ConnectionFailed(_) | ConnectionResult::TlsFailed(_) => {},
             other => panic!("Expected connection failure, got: {:?}", other),
         }
+    }
+
+    #[test]
+    fn test_fetch_folders_bad_host() {
+        // connect_imap should fail on bad host, so fetch_folders can't even be called
+        let config = bad_host_config();
+        let result = connect_imap(&config);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_email_metadata_fields() {
+        let meta = crate::account::EmailMetadata {
+            id: "test-id".into(),
+            account_id: "acct-id".into(),
+            folder: "INBOX".into(),
+            uid: 42,
+            subject: "Test".into(),
+            from_addr: "a@b.com".into(),
+            date: "2026-01-01".into(),
+            read: false,
+            body_path: "/tmp/body.txt".into(),
+        };
+        assert_eq!(meta.uid, 42);
+        assert_eq!(meta.folder, "INBOX");
+        assert!(!meta.read);
     }
 
     // Integration test requiring a live IMAP server
