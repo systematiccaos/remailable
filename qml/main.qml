@@ -26,6 +26,7 @@ Window {
     FolderListModel { id: folderListModel }
     EmailListModel { id: emailListModel }
     EmailReaderModel { id: emailReaderModel }
+    AttachmentListModel { id: attachmentListModel }
 
     ColumnLayout {
         anchors.fill: parent
@@ -47,6 +48,7 @@ Window {
                     case "folder_list": return "FolderList.qml"
                     case "email_list": return "EmailList.qml"
                     case "email_reader": return "EmailReader.qml"
+                    case "pdf_view": return "EmailReader.qml"  // PDF view is embedded in EmailReader
                     case "account_list":
                     default: return "AccountList.qml"
                 }

@@ -6,11 +6,14 @@ import io.remailable.Remailable 1.0
 Item {
     id: emailReader
 
+    // Internal state for HTML/plain text toggle
+    property bool showingHtml: emailReaderModel.email_content_type === "text/html"
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 0
 
-        // Header: back button + subject
+        // Header: back button + subject + HTML toggle
         Rectangle {
             Layout.fillWidth: true
             height: 80
@@ -49,6 +52,38 @@ Item {
                     elide: Text.ElideRight
                     Layout.fillWidth: true
                     maximumLineCount: 1
+                }
+
+                // HTML/Plain text toggle button (only visible when email is HTML)
+                Rectangle {
+                    visible: emailReaderModel.email_content_type === "text/html" || emailReaderModel.email_content_type.length > 0
+                    height: 44
+                    width: 70
+                    color: htmlToggleMouse.pressed ? "#cccccc" : (showingHtml ? "#d0d0d0" : "#e0e0e0")
+                    border.color: "#999999"
+                    border.width: 1
+                    radius: 4
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: showingHtml ? "Plain" : "HTML"
+                        font.pixelSize: 14
+                        font.bold: true
+                    }
+
+                    MouseArea {
+                        id: htmlToggleMouse
+                        anchors.fill: parent
+                        onClicked: {
+                            if (showingHtml) {
+                                emailReaderModel.show_plain_text()
+                                showingHtml = false
+                            } else {
+                                emailReaderModel.show_html()
+                                showingHtml = true
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -97,14 +132,7 @@ Item {
                 selectionColor: "#cccccc"
                 selectedTextColor: "#000000"
                 text: emailReaderModel.email_body
-                textFormat: {
-                    // Use RichText for HTML emails, PlainText for plain text
-                    if (emailReaderModel.email_content_type === "text/html") {
-                        return TextEdit.RichText
-                    } else {
-                        return TextEdit.PlainText
-                    }
-                }
+                textFormat: showingHtml ? TextEdit.RichText : TextEdit.PlainText
                 background: Rectangle {
                     color: "#ffffff"
                     border.color: "#cccccc"
@@ -113,7 +141,15 @@ Item {
             }
         }
 
-        // Thread section at bottom (READ-06)
+        // Attachment section
+        AttachmentList {
+            Layout.fillWidth: true
+            emailId: emailReaderModel.attachment_email_id
+            hasAttachments: emailReaderModel.email_has_attachments
+            visible: emailReaderModel.email_has_attachments
+        }
+
+        // Thread section at bottom
         Rectangle {
             Layout.fillWidth: true
             height: threadSection.height + 16
@@ -180,8 +216,108 @@ Item {
         }
     }
 
+    // PDF view state
+    Item {
+        id: pdfView
+        property string filePath: ""
+
+        visible: appModel.current_view === "pdf_view"
+        anchors.fill: parent
+
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 0
+
+            // PDF header with back button
+            Rectangle {
+                Layout.fillWidth: true
+                height: 60
+                color: "#ffffff"
+                border.bottom: "grey"
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: 16
+
+                    Rectangle {
+                        height: 44
+                        width: 80
+                        color: pdfBackMouse.pressed ? "#cccccc" : "#e0e0e0"
+                        border.color: "#999999"
+                        border.width: 1
+                        radius: 4
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "\u2190 Back"
+                            font.pixelSize: 16
+                        }
+
+                        MouseArea {
+                            id: pdfBackMouse
+                            anchors.fill: parent
+                            onClicked: appModel.current_view = "email_reader"
+                        }
+                    }
+
+                    Text {
+                        text: "PDF Viewer"
+                        font.pixelSize: 22
+                        font.bold: true
+                        Layout.fillWidth: true
+                    }
+                }
+            }
+
+            // PDF content area — fallback message for reMarkable Paper Pro
+            // Qt.labs.pdf may not be available on the device, so we provide
+            // a message with the file path for the user to open in system viewer.
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                color: "#ffffff"
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 16
+
+                    Text {
+                        text: "\uD83D\uDCD5"
+                        font.pixelSize: 48
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Text {
+                        text: "PDF Saved to Device"
+                        font.pixelSize: 28
+                        font.bold: true
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+
+                    Text {
+                        text: pdfView.filePath.length > 0 ? pdfView.filePath : ""
+                        font.pixelSize: 16
+                        color: "#666666"
+                        Layout.alignment: Qt.AlignHCenter
+                        wrapMode: Text.Wrap
+                        Layout.maximumWidth: 1200
+                    }
+
+                    Text {
+                        text: "Open this file in the reMarkable document viewer."
+                        font.pixelSize: 14
+                        color: "#888888"
+                        Layout.alignment: Qt.AlignHCenter
+                    }
+                }
+            }
+        }
+    }
+
     Component.onCompleted: {
         emailReaderModel.load_email(appModel.selected_email_id)
         emailReaderModel.load_thread(emailReaderModel.email_thread_id)
+        // Initialize HTML toggle state based on content type
+        showingHtml = emailReaderModel.email_content_type === "text/html"
     }
 }

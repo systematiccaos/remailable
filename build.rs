@@ -9,7 +9,9 @@ fn main() {
             .qml_file("qml/SyncIndicator.qml")
             .qml_file("qml/FolderList.qml")
             .qml_file("qml/EmailList.qml")
-            .qml_file("qml/EmailReader.qml"),
+            .qml_file("qml/EmailReader.qml")
+            .qml_file("qml/SearchBar.qml")
+            .qml_file("qml/AttachmentList.qml"),
     )
     .files(["src/cxxqt.rs"])
     .build();
