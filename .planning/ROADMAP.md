@@ -53,7 +53,7 @@
   4. User can search emails by subject and sender
   5. User can see attachment lists with filename and size, download attachments to device, and view PDFs inline
 **Plans**: 3 plans
-- [ ] 03-01 — Extend Rust backend: data model, storage, IMAP, and sync for folders/threads/attachments/search
+- [x] 03-01 — Extend Rust backend: data model, storage, IMAP, and sync for folders/threads/attachments/search
 - [ ] 03-02 — CXX-Qt bridge QObjects and QML screens for folder nav, email list, email reader, threads
 - [ ] 03-03 — Search, attachment handling, and inline PDF viewer QML
 **UI hint**: yes
@@ -75,5 +75,5 @@
 |-------|----------------|--------|-----------|
 | 1. Bootstrap & CI | 2/2 | Complete | 2026-04-29 |
 | 2. Connect & Sync | 3/3 | Complete | 2026-04-29 |
-| 3. Read & View | 0/0 | Not started | - |
+| 3. Read & View | 1/3 | In Progress | - |
 | 4. Compose & Reply | 0/0 | Not started | - |

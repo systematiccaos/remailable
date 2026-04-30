@@ -17,13 +17,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Email Reading
 
-- [ ] **READ-01**: User can list and navigate email folders (inbox, sent, drafts, trash, custom)
+- [x] **READ-01**: User can list and navigate email folders (inbox, sent, drafts, trash, custom)
 - [ ] **READ-02**: User can view an email list with subject, sender, and date
-- [ ] **READ-03**: User can read plain text email bodies
-- [ ] **READ-04**: User can read HTML email bodies rendered in an e-ink-friendly way
-- [ ] **READ-05**: User can see read/unread status on emails and it syncs with the server
-- [ ] **READ-06**: User can view emails grouped into conversation threads
-- [ ] **READ-07**: User can search emails by subject and sender
+- [x] **READ-03**: User can read plain text email bodies
+- [x] **READ-04**: User can read HTML email bodies rendered in an e-ink-friendly way
+- [x] **READ-05**: User can see read/unread status on emails and it syncs with the server
+- [x] **READ-06**: User can view emails grouped into conversation threads
+- [x] **READ-07**: User can search emails by subject and sender
 
 ### Email Composition
 
@@ -33,9 +33,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Attachments
 
-- [ ] **ATCH-01**: User can see a list of attachments on an email with filename and size
-- [ ] **ATCH-02**: User can download attachments to the device
-- [ ] **ATCH-03**: User can view PDF attachments inline using the reMarkable's display
+- [x] **ATCH-01**: User can see a list of attachments on an email with filename and size
+- [x] **ATCH-02**: User can download attachments to the device
+- [x] **ATCH-03**: User can view PDF attachments inline using the reMarkable's display
 
 ### Offline & Sync
 
@@ -113,16 +113,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OFFL-02 | Phase 2 | Complete |
 | OFFL-03 | Phase 2 | Complete |
 | OFFL-04 | Phase 2 | Complete |
-| READ-01 | Phase 3 | Pending |
+| READ-01 | Phase 3 | Complete |
 | READ-02 | Phase 3 | Pending |
-| READ-03 | Phase 3 | Pending |
-| READ-04 | Phase 3 | Pending |
-| READ-05 | Phase 3 | Pending |
-| READ-06 | Phase 3 | Pending |
-| READ-07 | Phase 3 | Pending |
-| ATCH-01 | Phase 3 | Pending |
-| ATCH-02 | Phase 3 | Pending |
-| ATCH-03 | Phase 3 | Pending |
+| READ-03 | Phase 3 | Complete |
+| READ-04 | Phase 3 | Complete |
+| READ-05 | Phase 3 | Complete |
+| READ-06 | Phase 3 | Complete |
+| READ-07 | Phase 3 | Complete |
+| ATCH-01 | Phase 3 | Complete |
+| ATCH-02 | Phase 3 | Complete |
+| ATCH-03 | Phase 3 | Complete |
 | COMP-01 | Phase 4 | Pending |
 | COMP-02 | Phase 4 | Pending |
 | COMP-03 | Phase 4 | Pending |
