@@ -19,13 +19,14 @@ Reading and replying to email on a reMarkable Paper Pro tablet, offline-first, w
 - ✓ Local email storage for offline access — Validated in Phase 2: Connect & Sync
 - ✓ Email sync with incremental updates — Validated in Phase 2: Connect & Sync
 - ✓ Sync status indicator — Validated in Phase 2: Connect & Sync
+- ✓ Browse and read emails with folder navigation, plain+HTML rendering, threads — Validated in Phase 3: Read & View
+- ✓ Email search by subject and sender — Validated in Phase 3: Read & View
+- ✓ Attachment listing, download, and inline PDF viewing — Validated in Phase 3: Read & View
 
 ### Active
 
-- [ ] Browse and read emails with a full-featured folder-based layout
 - [ ] Compose new emails and reply using the reMarkable Type Folio / system keyboard
 - [ ] Send emails via SMTP for each configured account
-- [ ] Render PDF and image attachments inline, leveraging reMarkable's display strengths
 
 ### Out of Scope
 
@@ -83,4 +84,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-29 after Phase 2 completion*
+*Last updated: 2026-04-30 after Phase 3 completion*
