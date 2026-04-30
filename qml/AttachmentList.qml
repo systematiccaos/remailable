@@ -22,7 +22,7 @@ Item {
             Layout.fillWidth: true
             height: 36
             color: "#f0f0f0"
-            border.bottom: "grey"
+            border.color: "transparent"
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -47,7 +47,7 @@ Item {
                 width: attachmentListView.width
                 height: 80
                 color: ma.pressed ? "#f0f0f0" : "#ffffff"
-                border.bottom: "grey"
+                border.color: "transparent"
 
                 RowLayout {
                     anchors.fill: parent

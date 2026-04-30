@@ -13,7 +13,7 @@ Item {
         anchors.right: parent.right
         height: 80
         color: "#ffffff"
-        border.bottom: "grey"
+        border.color: "transparent"
 
         RowLayout {
             anchors.fill: parent
@@ -66,7 +66,7 @@ Item {
             width: listView.width
             height: 80
             color: ma.pressed ? "#f0f0f0" : "#ffffff"
-            border.bottom: "grey"
+            border.color: "transparent"
 
             RowLayout {
                 anchors.fill: parent

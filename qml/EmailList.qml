@@ -14,7 +14,7 @@ Item {
             Layout.fillWidth: true
             height: 80
             color: "#ffffff"
-            border.bottom: "grey"
+            border.color: "transparent"
 
             RowLayout {
                 anchors.fill: parent
@@ -104,7 +104,7 @@ Item {
             Layout.fillWidth: true
             height: 36
             color: "#f5f5e0"
-            border.bottom: "grey"
+            border.color: "transparent"
 
             RowLayout {
                 anchors.fill: parent
@@ -161,7 +161,7 @@ Item {
                     if (!emailListModel.get_email_read(index)) return "#f0f5f0"  // Subtle grey-green tint for unread
                     return "#ffffff"
                 }
-                border.bottom: "grey"
+                border.color: "transparent"
 
                 RowLayout {
                     anchors.fill: parent

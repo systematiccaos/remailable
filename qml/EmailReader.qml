@@ -18,7 +18,7 @@ Item {
             Layout.fillWidth: true
             height: 80
             color: "#ffffff"
-            border.bottom: "grey"
+            border.color: "transparent"
 
             RowLayout {
                 anchors.fill: parent
@@ -93,7 +93,7 @@ Item {
             Layout.fillWidth: true
             height: 48
             color: "#ffffff"
-            border.bottom: "grey"
+            border.color: "transparent"
 
             RowLayout {
                 anchors.fill: parent
@@ -181,7 +181,7 @@ Item {
                         width: ListView.view.width
                         height: 44
                         color: threadMa.pressed ? "#f0f0f0" : "#ffffff"
-                        border.bottom: "grey"
+                        border.color: "transparent"
 
                         RowLayout {
                             anchors.fill: parent
@@ -233,7 +233,7 @@ Item {
                 Layout.fillWidth: true
                 height: 60
                 color: "#ffffff"
-                border.bottom: "grey"
+                border.color: "transparent"
 
                 RowLayout {
                     anchors.fill: parent

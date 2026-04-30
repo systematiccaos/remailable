@@ -13,7 +13,7 @@ Item {
         anchors.right: parent.right
         height: 80
         color: "#ffffff"
-        border.bottom: "grey"
+        border.color: "transparent"
 
         RowLayout {
             anchors.fill: parent
