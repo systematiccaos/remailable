@@ -6,7 +6,10 @@ fn main() {
             .qml_file("qml/main.qml")
             .qml_file("qml/AccountSettings.qml")
             .qml_file("qml/AccountList.qml")
-            .qml_file("qml/SyncIndicator.qml"),
+            .qml_file("qml/SyncIndicator.qml")
+            .qml_file("qml/FolderList.qml")
+            .qml_file("qml/EmailList.qml")
+            .qml_file("qml/EmailReader.qml"),
     )
     .files(["src/cxxqt.rs"])
     .build();
