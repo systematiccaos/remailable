@@ -53,20 +53,9 @@
   4. User can search emails by subject and sender
   5. User can see attachment lists with filename and size, download attachments to device, and view PDFs inline
 **Plans**: 3 plans
-- [x] 03-01 — Extend Rust backend: data model, storage, IMAP, and sync for folders/threads/attachments/search
-- [ ] 03-02 — CXX-Qt bridge QObjects and QML screens for folder nav, email list, email reader, threads
-- [ ] 03-03 — Search, attachment handling, and inline PDF viewer QML
-**UI hint**: yes
-
-### Phase 4: Compose & Reply
-**Goal**: Users can write and send emails using the Type Folio / system keyboard
-**Depends on**: Phase 3
-**Requirements**: COMP-01, COMP-02, COMP-03
-**Success Criteria** (what must be TRUE):
-  1. User can compose a new email entering To, subject, and body using the Type Folio / system keyboard
-  2. User can reply to an existing email with recipient and subject pre-filled based on the original
-  3. Outgoing emails are sent via SMTP for the currently selected account
-**Plans**: TBD
+- [ ] 03-01 — Rust data layer: MIME parsing, HTML sanitization, search, threads, attachment metadata, IMAP flag sync
+- [ ] 03-02 — CXX-Qt bridge + core reading UI: folder navigation, email list, plain text viewing, read/unread sync
+- [ ] 03-03 — Advanced features: HTML rendering, thread grouping, search, attachments, PDF inline viewing
 **UI hint**: yes
 
 ## Progress
