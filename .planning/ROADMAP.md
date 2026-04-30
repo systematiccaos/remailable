@@ -52,7 +52,10 @@
   3. User can see read/unread status synced with the server and view emails grouped into conversation threads
   4. User can search emails by subject and sender
   5. User can see attachment lists with filename and size, download attachments to device, and view PDFs inline
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 03-01 — Extend Rust backend: data model, storage, IMAP, and sync for folders/threads/attachments/search
+- [ ] 03-02 — CXX-Qt bridge QObjects and QML screens for folder nav, email list, email reader, threads
+- [ ] 03-03 — Search, attachment handling, and inline PDF viewer QML
 **UI hint**: yes
 
 ### Phase 4: Compose & Reply
