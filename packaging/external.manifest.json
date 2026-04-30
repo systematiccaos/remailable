@@ -1,11 +1,18 @@
 {
   "name": "remailable",
-  "application": "./remailable",
-  "workingDirectory": ".",
+  "application": "remailable",
   "environment": {
-    "QT_QPA_PLATFORM": "eglfs",
-    "QT_QPA_EGLFS_INTEGRATION": "eglfs_kms"
+    "LD_PRELOAD": "/home/root/shims/qtfb-shim.so",
+    "QTFB_SHIM_MODEL": "false",
+    "QTFB_SHIM_INPUT_MODE": "NATIVE",
+    "QTFB_SHIM_MODE": "N_RGB565",
+    "QTFB_SHIM_RESPECT_FULL_REFRESH_REQUESTS": "1",
+    "QT_QPA_PLATFORM": "epaper",
+    "QT_QPA_PLATFORM_PLUGIN_PATH": "/usr/lib/plugins/platforms",
+    "LD_LIBRARY_PATH": "/usr/lib",
+    "QML2_IMPORT_PATH": "/usr/lib/qml",
+    "QML_IMPORT_PATH": "/usr/lib/qml",
+    "QT_LOGGING_RULES": "qt.qml.diskcache=false"
   },
-  "aspectRatio": "original",
-  "disablesWindowedMode": true
+  "qtfb": true
 }
