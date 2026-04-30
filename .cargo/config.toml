@@ -1,40 +1,32 @@
 # Cross-compilation configuration for reMarkable Paper Pro
 #
 # This config is used when building for the reMarkable Paper Pro (codename: ferrari).
-# It points to the Yocto SDK's cross-compiler and sysroot for ARM target.
+# It points to the Yocto SDK's cross-compiler and sysroot for the ARM64 target.
 #
-# SDK Setup:
-# 1. Download and install the reMarkable Yocto SDK:
-#    https://storage.googleapis.com/remarkable-codex-toolchain/3.14.3.0/meta-toolchain-remarkable-4.0.813-ferrari-public-x86_64-toolchain.sh
-# 2. Run the installer: sh meta-toolchain-remarkable-4.0.813-ferrari-public-x86_64-toolchain.sh
-# 3. Source the environment script before building:
-#    source /opt/codex/rm-ferrari/4.0.813/environment-setup-cortexa72-crypto-remarkable-linux-gnueabi
-# 4. Then build with: cargo build --target arm-remarkable-linux-gnueabihf
+# IMPORTANT: The Paper Pro uses an AArch64 (ARM64) Cortex-A53 CPU with glibc.
+# The correct Rust target is aarch64-unknown-linux-gnu.
 #
-# The default install path is /opt/codex/rm-ferrari/4.0.813/ but can be changed
-# during SDK installation. Adjust the paths below if you installed elsewhere.
+# SDK Setup (Docker cross-compilation recommended on macOS):
+# 1. Build the Docker image: docker build -t remailable-cross docker/
+# 2. Run the cross-build inside the container (see scripts/docker-build.sh)
+#
+# For native macOS development builds, Qt is found via the system PATH
+# (e.g. /opt/homebrew/bin/qmake via Homebrew). No special config needed.
 #
 # CI: GitHub Actions installs the SDK automatically (see .github/workflows/).
-#
-# NOTE: For native development builds (cargo check / cargo build on macOS),
-# Qt is found via the system PATH. The QMAKE/PKG_CONFIG env vars below are
-# ONLY set when cross-compiling — they're configured in .cargo/config.toml
-# under the target-specific section or passed via CI environment.
 
-[target.arm-remarkable-linux-gnueabihf]
-linker = "arm-remarkable-linux-gnueabihf-g++"
+[target.aarch64-unknown-linux-gnu]
+linker = "aarch64-remarkable-linux-g++"
 
 # Sysroot and library paths — these tell the linker where to find the Yocto SDK's
-# Qt and system libraries for the ARM target.
+# Qt and system libraries for the ARM64 target.
+# NOTE: These paths are valid INSIDE the Docker container where the SDK is mounted.
 rustflags = [
-  "-C", "link-arg=--sysroot=/opt/codex/rm-ferrari/4.0.813/sysroots/cortexa72-crypto-remarkable-linux-gnueabi",
-  "-C", "link-arg=-L/opt/codex/rm-ferrari/4.0.813/sysroots/cortexa72-crypto-remarkable-linux-gnueabi/usr/lib",
-  "-C", "link-arg=-L/opt/codex/rm-ferrari/4.0.813/sysroots/cortexa72-crypto-remarkable-linux-gnueabi/lib",
+  "-C", "link-arg=--sysroot=/opt/codex/rm-ferrari/sysroots/cortexa53-crypto-remarkable-linux",
+  "-C", "link-arg=-L/opt/codex/rm-ferrari/sysroots/cortexa53-crypto-remarkable-linux/usr/lib",
+  "-C", "link-arg=-L/opt/codex/rm-ferrari/sysroots/cortexa53-crypto-remarkable-linux/lib",
 ]
 
-# Cross-compilation env vars — only active when building for arm-remarkable target.
-# These are set via the CI workflow (source SDK environment) or manually before
-# running: export QMAKE=/opt/codex/.../qmake PKG_CONFIG_PATH=...
-#
+# Cross-compilation env vars — set by the SDK environment-setup script.
 # For native macOS builds, Qt is found via /opt/homebrew/bin/qmake (Homebrew).
-# DO NOT put these in the global [env] section — it would break native builds.
+# DO NOT put QMAKE/PKG_CONFIG in the global [env] section — it breaks native builds.

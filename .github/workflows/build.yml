@@ -16,7 +16,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: armv7-unknown-linux-gnueabihf
+          targets: aarch64-unknown-linux-gnu
 
       - name: Cache Cargo registry
         uses: actions/cache@v4
@@ -31,8 +31,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: target
-          key: cargo-target-arm-${{ hashFiles('Cargo.lock') }}
-          restore-keys: cargo-target-arm-
+          key: cargo-target-aarch64-${{ hashFiles('Cargo.lock') }}
+          restore-keys: cargo-target-aarch64-
 
       - name: Install Qt (host)
         run: |
@@ -67,6 +67,9 @@ jobs:
       # The SDK environment-setup script sets CC, CXX, PKG_CONFIG_PATH, and other
       # cross-compilation variables. These do NOT persist between GitHub Actions steps
       # (each `run:` block is a separate shell), so we source and build in one step.
+      #
+      # IMPORTANT: The Paper Pro uses an AArch64 (ARM64) Cortex-A53 with glibc.
+      # The correct Rust target is aarch64-unknown-linux-gnu, NOT armhf or musl.
       - name: Cross-compile for reMarkable Paper Pro
         run: |
           set -euo pipefail
@@ -76,14 +79,14 @@ jobs:
           export QMAKE="$(which qmake)"
           export PKG_CONFIG_PATH="$OECORE_PKGS_PATH"
           export PKG_CONFIG_SYSROOT_DIR="$OECORE_TARGET_SYSROOT"
-          cargo build --release --target arm-remarkable-linux-gnueabihf
+          cargo build --release --target aarch64-unknown-linux-gnu
         env:
-          CARGO_TARGET_ARM_REMARKABLE_LINUX_GNUEABIHF_LINKER: arm-remarkable-linux-gnueabihf-g++
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-remarkable-linux-g++
 
       - name: Package for AppLoad
         run: |
           set -euo pipefail
-          ./scripts/package.sh target/arm-remarkable-linux-gnueabihf/release/remailable
+          ./scripts/package.sh target/aarch64-unknown-linux-gnu/release/remailable
 
       - name: Upload AppLoad package
         uses: actions/upload-artifact@v4

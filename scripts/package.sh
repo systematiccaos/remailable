@@ -9,7 +9,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-BINARY_PATH="${1:-$PROJECT_ROOT/target/arm-remarkable-linux-gnueabihf/release/remailable}"
+BINARY_PATH="${1:-$PROJECT_ROOT/target/aarch64-unknown-linux-gnu/release/remailable}"
 PKG_DIR="$PROJECT_ROOT/build/remailable"
 
 echo "Assembling AppLoad package..."
