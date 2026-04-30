@@ -23,6 +23,9 @@ Window {
     // Data models (instantiated by CXX-Qt)
     AppModel { id: appModel }
     AccountListModel { id: accountListModel }
+    FolderListModel { id: folderListModel }
+    EmailListModel { id: emailListModel }
+    EmailReaderModel { id: emailReaderModel }
 
     ColumnLayout {
         anchors.fill: parent
@@ -41,6 +44,9 @@ Window {
             source: {
                 switch (appModel.current_view) {
                     case "account_settings": return "AccountSettings.qml"
+                    case "folder_list": return "FolderList.qml"
+                    case "email_list": return "EmailList.qml"
+                    case "email_reader": return "EmailReader.qml"
                     case "account_list":
                     default: return "AccountList.qml"
                 }

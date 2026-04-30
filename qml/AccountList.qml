@@ -89,6 +89,34 @@ Item {
                     }
                 }
 
+                // Open Folders button — navigate to folder list
+                Rectangle {
+                    height: 36
+                    width: 90
+                    color: folderMouse.pressed ? "#cccccc" : "#e0e0e0"
+                    border.color: "#999999"
+                    border.width: 1
+                    radius: 4
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Folders"
+                        font.pixelSize: 14
+                    }
+
+                    MouseArea {
+                        id: folderMouse
+                        anchors.fill: parent
+                        onClicked: {
+                            var accountId = accountListModel.get_account_id(index);
+                            var displayName = accountListModel.get_account_display_name(index);
+                            appModel.active_account_id = accountId;
+                            appModel.active_account_name = displayName;
+                            appModel.current_view = "folder_list"
+                        }
+                    }
+                }
+
                 // Delete button
                 Rectangle {
                     height: 36
