@@ -5,7 +5,7 @@
 /// email reading, and sync status display.
 use std::pin::Pin;
 
-use crate::account::{AccountConfig, EmailMetadata};
+use crate::account::{AccountConfig, AttachmentMetadata, EmailMetadata};
 use crate::imap_conn;
 use crate::smtp_conn;
 use crate::storage::Storage;
@@ -119,14 +119,16 @@ pub mod qobject {
     }
 
     // -----------------------------------------------------------------------
-    // EmailListModel — email list browsing (READ-02, READ-05, READ-06)
+    // EmailListModel — email list browsing (READ-02, READ-05, READ-06, READ-07)
     // -----------------------------------------------------------------------
     extern "RustQt" {
-        /// Email list model — provides email browsing within a folder.
+        /// Email list model — provides email browsing within a folder, with search and thread modes.
         #[qobject]
         #[qml_element]
         #[qproperty(i32, email_count)]
         #[qproperty(QString, current_folder)]
+        #[qproperty(bool, is_searching)]
+        #[qproperty(bool, thread_mode)]
         type EmailListModel = super::EmailListModelRust;
     }
 
@@ -166,6 +168,18 @@ pub mod qobject {
         /// Toggle read/unread status of email at index
         #[qinvokable]
         fn toggle_email_read(self: Pin<&mut EmailListModel>, index: i32);
+
+        /// Search emails by subject or sender for the current account
+        #[qinvokable]
+        fn search_emails(self: Pin<&mut EmailListModel>, query: &QString);
+
+        /// Clear search results and return to normal folder view
+        #[qinvokable]
+        fn clear_search(self: Pin<&mut EmailListModel>);
+
+        /// Refresh emails grouped by thread for the given account+folder
+        #[qinvokable]
+        fn refresh_threaded(self: Pin<&mut EmailListModel>, account_id: &QString, folder: &QString);
     }
 
     // -----------------------------------------------------------------------
@@ -183,6 +197,7 @@ pub mod qobject {
         #[qproperty(QString, email_thread_id)]
         #[qproperty(bool, email_is_read)]
         #[qproperty(bool, email_has_attachments)]
+        #[qproperty(QString, attachment_email_id)]
         type EmailReaderModel = super::EmailReaderModelRust;
     }
 
@@ -210,6 +225,51 @@ pub mod qobject {
         /// Get thread email date at index
         #[qinvokable]
         fn get_thread_email_date(self: &EmailReaderModel, index: i32) -> QString;
+
+        /// Switch to HTML body rendering
+        #[qinvokable]
+        fn show_html(self: Pin<&mut EmailReaderModel>);
+
+        /// Switch to plain text body rendering
+        #[qinvokable]
+        fn show_plain_text(self: Pin<&mut EmailReaderModel>);
+    }
+
+    // -----------------------------------------------------------------------
+    // AttachmentListModel — attachment browsing and download (ATCH-01, ATCH-02, ATCH-03)
+    // -----------------------------------------------------------------------
+    extern "RustQt" {
+        /// Attachment list model — provides attachment metadata and download for an email.
+        #[qobject]
+        #[qml_element]
+        #[qproperty(i32, attachment_count)]
+        type AttachmentListModel = super::AttachmentListModelRust;
+    }
+
+    extern "RustQt" {
+        /// Load attachment metadata for the given email_id
+        #[qinvokable]
+        fn load_attachments(self: Pin<&mut AttachmentListModel>, email_id: &QString);
+
+        /// Get attachment filename at index
+        #[qinvokable]
+        fn get_attachment_filename(self: &AttachmentListModel, index: i32) -> QString;
+
+        /// Get attachment size in bytes at index
+        #[qinvokable]
+        fn get_attachment_size(self: &AttachmentListModel, index: i32) -> i32;
+
+        /// Get attachment content type at index
+        #[qinvokable]
+        fn get_attachment_content_type(self: &AttachmentListModel, index: i32) -> QString;
+
+        /// Download attachment at index to local device storage, returns file path
+        #[qinvokable]
+        fn download_attachment(self: Pin<&mut AttachmentListModel>, index: i32) -> QString;
+
+        /// Check if attachment at index is already downloaded
+        #[qinvokable]
+        fn is_attachment_downloaded(self: &AttachmentListModel, index: i32) -> bool;
     }
 }
 
@@ -295,8 +355,12 @@ pub struct FolderListModelRust {
 pub struct EmailListModelRust {
     email_count: i32,
     current_folder: cxx_qt_lib::QString,
+    is_searching: bool,
+    thread_mode: bool,
     /// Internal cache of emails loaded from storage
     emails: Vec<EmailMetadata>,
+    /// Internal cache of account_id for search/refresh operations
+    account_id: String,
 }
 
 /// Rust struct backing the EmailReaderModel QObject.
@@ -310,8 +374,17 @@ pub struct EmailReaderModelRust {
     email_thread_id: cxx_qt_lib::QString,
     email_is_read: bool,
     email_has_attachments: bool,
+    attachment_email_id: cxx_qt_lib::QString,
     /// Internal cache of thread emails
     thread_emails: Vec<EmailMetadata>,
+}
+
+/// Rust struct backing the AttachmentListModel QObject.
+#[derive(Default)]
+pub struct AttachmentListModelRust {
+    attachment_count: i32,
+    /// Internal cache of attachments loaded from storage
+    attachments: Vec<AttachmentMetadata>,
 }
 
 // ---------------------------------------------------------------------------
@@ -519,23 +592,27 @@ impl qobject::FolderListModel {
 
 impl qobject::EmailListModel {
     /// Load emails from the database and update email_count.
+    /// Also stores account_id internally for search/refresh operations.
     pub fn refresh_emails(
         self: Pin<&mut Self>,
         account_id: &cxx_qt_lib::QString,
         folder: &cxx_qt_lib::QString,
     ) {
-        let account_id = qstring_to_string(account_id);
+        let account_id_str = qstring_to_string(account_id);
         let folder = qstring_to_string(folder);
         let emails = STORAGE
             .lock()
             .expect("Storage mutex poisoned")
-            .list_emails_by_folder(&account_id, &folder)
+            .list_emails_by_folder(&account_id_str, &folder)
             .unwrap_or_default();
         let count = emails.len() as i32;
         let mut rust = self.rust_mut();
         rust.emails = emails;
         rust.email_count = count;
         rust.current_folder = string_to_qstring(&folder);
+        rust.account_id = account_id_str;
+        rust.is_searching = false;
+        rust.thread_mode = false;
     }
 
     /// Get the email ID at the given index.
@@ -625,6 +702,69 @@ impl qobject::EmailListModel {
             rust.emails[idx].read = new_read;
         }
     }
+
+    /// Search emails by subject or sender for the current account.
+    pub fn search_emails(self: Pin<&mut Self>, query: &cxx_qt_lib::QString) {
+        let query_str = qstring_to_string(query);
+        let account_id = {
+            let rust = self.rust();
+            rust.account_id.clone()
+        };
+
+        let emails = STORAGE
+            .lock()
+            .expect("Storage mutex poisoned")
+            .search_emails(&account_id, &query_str)
+            .unwrap_or_default();
+        let count = emails.len() as i32;
+        let mut rust = self.rust_mut();
+        rust.emails = emails;
+        rust.email_count = count;
+        rust.is_searching = true;
+    }
+
+    /// Clear search results and return to normal folder view.
+    pub fn clear_search(self: Pin<&mut Self>) {
+        let (account_id, current_folder) = {
+            let rust = self.rust();
+            (rust.account_id.clone(), qstring_to_string(&rust.current_folder))
+        };
+
+        let emails = STORAGE
+            .lock()
+            .expect("Storage mutex poisoned")
+            .list_emails_by_folder(&account_id, &current_folder)
+            .unwrap_or_default();
+        let count = emails.len() as i32;
+        let mut rust = self.rust_mut();
+        rust.emails = emails;
+        rust.email_count = count;
+        rust.is_searching = false;
+    }
+
+    /// Load emails grouped by thread for the selected folder.
+    /// Flattens thread groups with thread headers into a single list.
+    pub fn refresh_threaded(
+        self: Pin<&mut Self>,
+        account_id: &cxx_qt_lib::QString,
+        folder: &cxx_qt_lib::QString,
+    ) {
+        let account_id_str = qstring_to_string(account_id);
+        let folder = qstring_to_string(folder);
+        // Get flat list for the folder — threading is visual in QML via thread_id
+        let emails = STORAGE
+            .lock()
+            .expect("Storage mutex poisoned")
+            .list_emails_by_folder(&account_id_str, &folder)
+            .unwrap_or_default();
+        let count = emails.len() as i32;
+        let mut rust = self.rust_mut();
+        rust.emails = emails;
+        rust.email_count = count;
+        rust.current_folder = string_to_qstring(&folder);
+        rust.account_id = account_id_str;
+        rust.thread_mode = true;
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -666,6 +806,7 @@ impl qobject::EmailReaderModel {
         rust.email_thread_id = string_to_qstring(&email.thread_id);
         rust.email_is_read = true; // We just marked it read
         rust.email_has_attachments = email.has_attachments;
+        rust.attachment_email_id = string_to_qstring(&email_id);
     }
 
     /// Load all emails in a thread by thread_id.
@@ -710,5 +851,137 @@ impl qobject::EmailReaderModel {
             return string_to_qstring("");
         }
         string_to_qstring(&rust.thread_emails[index as usize].date)
+    }
+
+    /// Switch to HTML body rendering.
+    pub fn show_html(self: Pin<&mut Self>) {
+        self.rust_mut().email_content_type = string_to_qstring("text/html");
+    }
+
+    /// Switch to plain text body rendering.
+    pub fn show_plain_text(self: Pin<&mut Self>) {
+        self.rust_mut().email_content_type = string_to_qstring("text/plain");
+    }
+}
+
+// ---------------------------------------------------------------------------
+// AttachmentListModel implementations
+// ---------------------------------------------------------------------------
+
+impl qobject::AttachmentListModel {
+    /// Load attachments for the given email_id from storage.
+    pub fn load_attachments(self: Pin<&mut Self>, email_id: &cxx_qt_lib::QString) {
+        let email_id = qstring_to_string(email_id);
+        let attachments = STORAGE
+            .lock()
+            .expect("Storage mutex poisoned")
+            .list_attachments(&email_id)
+            .unwrap_or_default();
+        let count = attachments.len() as i32;
+        let mut rust = self.rust_mut();
+        rust.attachments = attachments;
+        rust.attachment_count = count;
+    }
+
+    /// Get the attachment filename at the given index.
+    pub fn get_attachment_filename(self: &Self, index: i32) -> cxx_qt_lib::QString {
+        let rust = self.rust();
+        if index < 0 || index as usize >= rust.attachments.len() {
+            return string_to_qstring("");
+        }
+        string_to_qstring(&rust.attachments[index as usize].filename)
+    }
+
+    /// Get the attachment size in bytes at the given index.
+    pub fn get_attachment_size(self: &Self, index: i32) -> i32 {
+        let rust = self.rust();
+        if index < 0 || index as usize >= rust.attachments.len() {
+            return 0;
+        }
+        rust.attachments[index as usize].size as i32
+    }
+
+    /// Get the attachment content type at the given index.
+    pub fn get_attachment_content_type(self: &Self, index: i32) -> cxx_qt_lib::QString {
+        let rust = self.rust();
+        if index < 0 || index as usize >= rust.attachments.len() {
+            return string_to_qstring("");
+        }
+        string_to_qstring(&rust.attachments[index as usize].content_type)
+    }
+
+    /// Download an attachment at the given index to local device storage.
+    /// Returns the download file path as a QString, or empty string on failure.
+    pub fn download_attachment(self: Pin<&mut Self>, index: i32) -> cxx_qt_lib::QString {
+        let (filename, email_id, account_id, att_id, _size);
+        {
+            let rust = self.rust();
+            if index < 0 || index as usize >= rust.attachments.len() {
+                return string_to_qstring("");
+            }
+            let att = &rust.attachments[index as usize];
+            filename = att.filename.clone();
+            email_id = att.email_id.clone();
+            account_id = att.account_id.clone();
+            att_id = att.id.clone();
+            _size = att.size;
+        }
+
+        // Source path: attachments/{account_id}/{email_id}/{filename} in data dir
+        let base = dirs::data_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+        let source_path = base.join("remailable")
+            .join("attachments")
+            .join(&account_id)
+            .join(&email_id)
+            .join(&filename);
+
+        if !source_path.exists() {
+            // Attachment file not yet synced to disk — return empty string
+            return string_to_qstring("");
+        }
+
+        // Destination path: remailable/downloads/{email_id}/{filename}
+        let dest_dir = base.join("remailable").join("downloads").join(&email_id);
+        if let Err(_) = std::fs::create_dir_all(&dest_dir) {
+            return string_to_qstring("");
+        }
+        let dest_path = dest_dir.join(&filename);
+
+        // Copy the file (use copy so original stays in attachments dir)
+        if std::fs::copy(&source_path, &dest_path).is_err() {
+            return string_to_qstring("");
+        }
+
+        let download_path = format!(
+            "remailable/downloads/{}/{}",
+            email_id, filename
+        );
+
+        // Mark as downloaded in the database
+        let local_path = download_path.clone();
+        let _ = STORAGE
+            .lock()
+            .expect("Storage mutex poisoned")
+            .mark_downloaded(&att_id, &local_path);
+
+        // Update the local cache's downloaded flag
+        {
+            let mut rust = self.rust_mut();
+            if index >= 0 && (index as usize) < rust.attachments.len() {
+                rust.attachments[index as usize].downloaded = true;
+                rust.attachments[index as usize].local_path = download_path;
+            }
+        }
+
+        string_to_qstring(&format!("{}", dest_path.display()))
+    }
+
+    /// Check if the attachment at the given index has been downloaded.
+    pub fn is_attachment_downloaded(self: &Self, index: i32) -> bool {
+        let rust = self.rust();
+        if index < 0 || index as usize >= rust.attachments.len() {
+            return false;
+        }
+        rust.attachments[index as usize].downloaded
     }
 }
