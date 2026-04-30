@@ -137,6 +137,10 @@ impl<'a> SyncEngine<'a> {
                 date,
                 read,
                 body_path,
+                content_type: String::new(),     // Will be populated by extended sync (Plan 03-01)
+                in_reply_to: String::new(),      // Will be populated by extended sync (Plan 03-01)
+                thread_id: String::new(),        // Will be populated by extended sync (Plan 03-01)
+                has_attachments: false,           // Will be populated by extended sync (Plan 03-01)
             };
 
             self.storage.save_email_metadata(&email)

@@ -135,6 +135,10 @@ pub fn fetch_message_headers(
             date,
             read,
             body_path: String::new(), // Set by sync engine after saving body
+            content_type: String::new(), // Set by sync engine from BODYSTRUCTURE
+            in_reply_to: String::new(),  // Set by sync engine from thread headers
+            thread_id: String::new(),    // Set by sync engine from thread headers
+            has_attachments: false,       // Set by sync engine from BODYSTRUCTURE
         });
     }
 
@@ -209,6 +213,10 @@ mod tests {
             date: "2026-01-01".into(),
             read: false,
             body_path: "/tmp/body.txt".into(),
+            content_type: "text/plain".into(),
+            in_reply_to: String::new(),
+            thread_id: "test-id".into(),
+            has_attachments: false,
         };
         assert_eq!(meta.uid, 42);
         assert_eq!(meta.folder, "INBOX");

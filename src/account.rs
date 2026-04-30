@@ -13,6 +13,24 @@ pub struct EmailMetadata {
     pub date: String,        // ISO 8601 or IMAP date format
     pub read: bool,
     pub body_path: String,   // Path to locally stored email body file
+    pub content_type: String, // MIME content type (e.g. "text/plain", "text/html") — READ-03, READ-04
+    pub in_reply_to: String,  // Message-ID of parent email for threading — READ-06
+    pub thread_id: String,    // Groups emails in same conversation — READ-06
+    pub has_attachments: bool, // Flag for attachment indicator in list view — ATCH-01
+}
+
+/// Metadata for an email attachment, persisted in the attachments table.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AttachmentMetadata {
+    pub id: String,           // UUID v4
+    pub email_id: String,     // FK to email_metadata.id
+    pub account_id: String,   // For storage directory organization
+    pub filename: String,      // Attachment filename from Content-Disposition
+    pub content_type: String,  // MIME type (e.g. "application/pdf")
+    pub size: i64,             // Size in bytes
+    pub part_number: String,   // IMAP part number for fetching (e.g. "2", "2.1")
+    pub downloaded: bool,      // Whether file is saved to disk
+    pub local_path: String,    // Path to downloaded file, empty if not downloaded
 }
 
 /// Full account configuration including IMAP and SMTP settings.
