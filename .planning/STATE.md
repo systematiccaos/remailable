@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-04-30T07:30:15.772Z"
+last_updated: "2026-04-30T07:48:22.341Z"
 progress:
-  total_phases: 4
+  total_phases: 3
   completed_phases: 2
   total_plans: 8
-  completed_plans: 6
+  completed_plans: 7
 ---
 
 # STATE: remailable
@@ -23,9 +23,9 @@ progress:
 ## Current Position
 
 Phase: 03 (read-view) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 **Phase:** 3
-**Plan:** 03-01 COMPLETED → Next: 03-02
+**Plan:** 03-02 COMPLETED → Next: 03-03
 **Status:** Executing Phase 03
 
 ## Performance Metrics
@@ -42,7 +42,8 @@ Plan: 2 of 3
 | Phase 02-connect-sync P02 | 16 min | 2 tasks | 4 files |
 | Phase 02-connect-sync P03 | 12 min | 2 tasks | 9 files |
 | Phase 03-read-view P01 | 17 min | 2 tasks | 5 files |
-| Phase 03-read-view P01 | 17min | 2 tasks | 5 files |
+| Phase 03-read-view P02 | 13 min | 2 tasks | 6 files |
+| Phase 03-read-view P02 | 13min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -75,9 +76,12 @@ Plan: 2 of 3
 - Plan 03-01: HTML entities decoded before tag stripping with Unicode placeholders to preserve angle brackets
 - Plan 03-01: PRAGMA foreign_keys = ON for proper FK constraint enforcement
 - Plan 03-01: Schema migration via PRAGMA table_info + ALTER TABLE ADD COLUMN for backward compat
-- [Phase 03-read-view]: regex crate for HTML stripping in html_to_eink (simple approach for e-ink fallback)
-- [Phase 03-read-view]: BODYSTRUCTURE parsed via regex (not full MIME parser) - sufficient for common patterns
-- [Phase 03-read-view]: Schema migration via PRAGMA table_info + ALTER TABLE ADD COLUMN for backward compat
+- Plan 03-02: TextArea with RichText format as universal HTML renderer for e-ink (QtWebView may not be available on Paper Pro)
+- Plan 03-02: select_folder returns void, QML reads get_folder_name and sets appModel.selected_folder
+- Plan 03-02: Two-phase borrow pattern for toggle_email_read (rust() then rust_mut())
+- [Phase 03-read-view]: TextArea with RichText format as universal HTML renderer for e-ink (QtWebView may not be available on Paper Pro)
+- [Phase 03-read-view]: select_folder returns void — QML reads get_folder_name and sets appModel.selected_folder (decoupled models)
+- [Phase 03-read-view]: Two-phase borrow pattern for toggle_email_read: rust() for read then rust_mut() for write
 
 ### Active Todos
 
@@ -87,6 +91,7 @@ Plan: 2 of 3
 - [x] Plan 02-02: Sync engine with incremental IMAP email sync to local storage
 - [x] Plan 02-03: CXX-Qt bridge and QML UI for account management and sync status
 - [x] Plan 03-01: Extend Rust backend for reading, threads, search, and attachments
+- [x] Plan 03-02: CXX-Qt bridge QObjects and QML screens for folder nav, email list, reader
 
 ### Blockers
 
@@ -94,6 +99,6 @@ Plan: 2 of 3
 
 ## Session Continuity
 
-**Last action:** Completed 03-01-PLAN.md (extended data model, storage, IMAP, sync for reading/threads/attachments)
-**Next step:** Plan 03-02 (CXX-Qt bridge QObjects for folder nav, email list, reader, threads)
-**Carry-forward:** CXX-Qt 0.8 API, Qt 6 for local dev, Lazy<Mutex<Storage>> bridge pattern, EmailMetadata with content_type/in_reply_to/thread_id/has_attachments, AttachmentMetadata, search_emails/list_thread/get_email/list_attachments/mark_downloaded, ParsedStructure/AttachmentPart (BODYSTRUCTURE parsing), html_to_eink, calculate_thread_id, fetch_bodystructure/fetch_attachment_part/fetch_message_headers_for_thread, FK-safe deletion pattern, PRAGMA migration pattern
+**Last action:** Completed 03-02-PLAN.md (CXX-Qt bridge QObjects and QML screens for folder nav, email list, reader)
+**Next step:** Plan 03-03 (search UI, attachment handling, inline PDF viewer)
+**Carry-forward:** CXX-Qt 0.8 API, Qt 6 for local dev, Lazy<Mutex<Storage>> bridge pattern, EmailMetadata with content_type/in_reply_to/thread_id/has_attachments, AttachmentMetadata, index-based model getters (FolderListModel, EmailListModel, EmailReaderModel), RichText HTML fallback for e-ink, select_folder QML-side pattern, two-phase borrow for toggle_email_read, Loader source navigation pattern

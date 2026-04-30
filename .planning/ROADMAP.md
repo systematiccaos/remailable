@@ -53,8 +53,8 @@
   4. User can search emails by subject and sender
   5. User can see attachment lists with filename and size, download attachments to device, and view PDFs inline
 **Plans**: 3 plans
-- [ ] 03-01 — Rust data layer: MIME parsing, HTML sanitization, search, threads, attachment metadata, IMAP flag sync
-- [ ] 03-02 — CXX-Qt bridge + core reading UI: folder navigation, email list, plain text viewing, read/unread sync
+- [x] 03-01 — Rust data layer: MIME parsing, HTML sanitization, search, threads, attachment metadata, IMAP flag sync
+- [x] 03-02 — CXX-Qt bridge + core reading UI: folder navigation, email list, plain text viewing, read/unread sync
 - [ ] 03-03 — Advanced features: HTML rendering, thread grouping, search, attachments, PDF inline viewing
 **UI hint**: yes
 
@@ -64,5 +64,5 @@
 |-------|----------------|--------|-----------|
 | 1. Bootstrap & CI | 2/2 | Complete | 2026-04-29 |
 | 2. Connect & Sync | 3/3 | Complete | 2026-04-29 |
-| 3. Read & View | 1/3 | In Progress | - |
+| 3. Read & View | 2/3 | In Progress|  |
 | 4. Compose & Reply | 0/0 | Not started | - |

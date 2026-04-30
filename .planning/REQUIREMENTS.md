@@ -18,7 +18,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Email Reading
 
 - [x] **READ-01**: User can list and navigate email folders (inbox, sent, drafts, trash, custom)
-- [ ] **READ-02**: User can view an email list with subject, sender, and date
+- [x] **READ-02**: User can view an email list with subject, sender, and date
 - [x] **READ-03**: User can read plain text email bodies
 - [x] **READ-04**: User can read HTML email bodies rendered in an e-ink-friendly way
 - [x] **READ-05**: User can see read/unread status on emails and it syncs with the server
@@ -114,7 +114,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OFFL-03 | Phase 2 | Complete |
 | OFFL-04 | Phase 2 | Complete |
 | READ-01 | Phase 3 | Complete |
-| READ-02 | Phase 3 | Pending |
+| READ-02 | Phase 3 | Complete |
 | READ-03 | Phase 3 | Complete |
 | READ-04 | Phase 3 | Complete |
 | READ-05 | Phase 3 | Complete |
