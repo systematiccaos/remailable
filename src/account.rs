@@ -39,6 +39,7 @@ pub struct AttachmentMetadata {
 pub struct AccountConfig {
     pub id: String,              // UUID v4
     pub display_name: String,    // User-facing name like "Work" or "Personal"
+    pub email: String,           // Email address (e.g. "user@example.com")
     pub imap_host: String,
     pub imap_port: u16,          // Typically 993 for IMAPS
     pub username: String,
@@ -48,8 +49,10 @@ pub struct AccountConfig {
 }
 
 impl AccountConfig {
+    #[allow(dead_code)]
     pub fn new(
         display_name: String,
+        email: String,
         imap_host: String,
         imap_port: u16,
         username: String,
@@ -60,6 +63,7 @@ impl AccountConfig {
         Self {
             id: uuid::Uuid::new_v4().to_string(),
             display_name,
+            email,
             imap_host,
             imap_port,
             username,

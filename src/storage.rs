@@ -88,6 +88,14 @@ impl Storage {
 
     /// Add new columns to email_metadata if they don't exist (for existing databases).
     fn migrate_email_metadata(&self) -> Result<(), rusqlite::Error> {
+        // Migrate accounts table
+        let account_columns = self.get_column_names("accounts")?;
+        if !account_columns.contains(&"email".to_string()) {
+            self.conn.execute_batch(
+                "ALTER TABLE accounts ADD COLUMN email TEXT NOT NULL DEFAULT '';"
+            )?;
+        }
+
         let existing_columns = self.get_column_names("email_metadata")?;
 
         if !existing_columns.contains(&"content_type".to_string()) {
@@ -129,9 +137,9 @@ impl Storage {
 
     pub fn save_account(&self, account: &AccountConfig) -> Result<(), rusqlite::Error> {
         self.conn.execute(
-            "INSERT OR REPLACE INTO accounts (id, display_name, imap_host, imap_port, username, password, smtp_host, smtp_port)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-            params![account.id, account.display_name, account.imap_host, account.imap_port,
+            "INSERT OR REPLACE INTO accounts (id, display_name, email, imap_host, imap_port, username, password, smtp_host, smtp_port)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            params![account.id, account.display_name, account.email, account.imap_host, account.imap_port,
                     account.username, account.password, account.smtp_host, account.smtp_port],
         )?;
         Ok(())
@@ -139,18 +147,19 @@ impl Storage {
 
     pub fn list_accounts(&self) -> Result<Vec<AccountConfig>, rusqlite::Error> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, display_name, imap_host, imap_port, username, password, smtp_host, smtp_port FROM accounts"
+            "SELECT id, display_name, email, imap_host, imap_port, username, password, smtp_host, smtp_port FROM accounts"
         )?;
         let accounts = stmt.query_map([], |row| {
             Ok(AccountConfig {
                 id: row.get(0)?,
                 display_name: row.get(1)?,
-                imap_host: row.get(2)?,
-                imap_port: row.get(3)?,
-                username: row.get(4)?,
-                password: row.get(5)?,
-                smtp_host: row.get(6)?,
-                smtp_port: row.get(7)?,
+                email: row.get(2)?,
+                imap_host: row.get(3)?,
+                imap_port: row.get(4)?,
+                username: row.get(5)?,
+                password: row.get(6)?,
+                smtp_host: row.get(7)?,
+                smtp_port: row.get(8)?,
             })
         })?.collect::<Result<Vec<_>, _>>()?;
         Ok(accounts)
@@ -158,18 +167,19 @@ impl Storage {
 
     pub fn get_account(&self, id: &str) -> Result<Option<AccountConfig>, rusqlite::Error> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, display_name, imap_host, imap_port, username, password, smtp_host, smtp_port FROM accounts WHERE id = ?1"
+            "SELECT id, display_name, email, imap_host, imap_port, username, password, smtp_host, smtp_port FROM accounts WHERE id = ?1"
         )?;
         let mut accounts = stmt.query_map(params![id], |row| {
             Ok(AccountConfig {
                 id: row.get(0)?,
                 display_name: row.get(1)?,
-                imap_host: row.get(2)?,
-                imap_port: row.get(3)?,
-                username: row.get(4)?,
-                password: row.get(5)?,
-                smtp_host: row.get(6)?,
-                smtp_port: row.get(7)?,
+                email: row.get(2)?,
+                imap_host: row.get(3)?,
+                imap_port: row.get(4)?,
+                username: row.get(5)?,
+                password: row.get(6)?,
+                smtp_host: row.get(7)?,
+                smtp_port: row.get(8)?,
             })
         })?.collect::<Result<Vec<_>, _>>()?;
         Ok(accounts.pop())
@@ -902,14 +912,15 @@ mod tests {
             conn.execute_batch("PRAGMA foreign_keys = ON;").unwrap();
             conn.execute_batch(
                 "CREATE TABLE IF NOT EXISTS accounts (
-                    id TEXT PRIMARY KEY,
-                    display_name TEXT NOT NULL,
-                    imap_host TEXT NOT NULL,
-                    imap_port INTEGER NOT NULL,
-                    username TEXT NOT NULL,
-                    password TEXT NOT NULL,
-                    smtp_host TEXT NOT NULL,
-                    smtp_port INTEGER NOT NULL
+                id TEXT PRIMARY KEY,
+                display_name TEXT NOT NULL,
+                email TEXT NOT NULL DEFAULT '',
+                imap_host TEXT NOT NULL,
+                imap_port INTEGER NOT NULL,
+                username TEXT NOT NULL,
+                password TEXT NOT NULL,
+                smtp_host TEXT NOT NULL,
+                smtp_port INTEGER NOT NULL
                 );
                 CREATE TABLE IF NOT EXISTS email_metadata (
                     id TEXT PRIMARY KEY,

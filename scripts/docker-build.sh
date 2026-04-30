@@ -64,11 +64,11 @@ docker run --rm \
         which aarch64-remarkable-linux-g++ || { echo "ERROR: cross-compiler not on PATH"; exit 1; }
 
         echo ""
-        echo "=== Building remailable ==="
+        echo "=== Building remailable-backend (AppLoad headless) ==="
         cd /build
-        cargo build --target aarch64-unknown-linux-gnu --release
+        REMAILABLE_NO_QT=1 cargo build --bin remailable-backend --target aarch64-unknown-linux-gnu --release
     '
 
 echo ""
 echo "=== Build complete ==="
-echo "Binary: target/aarch64-unknown-linux-gnu/${MODE}/remailable"
+echo "Backend binary: target/aarch64-unknown-linux-gnu/${MODE}/remailable-backend"

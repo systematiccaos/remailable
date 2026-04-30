@@ -52,6 +52,7 @@ pub mod qobject {
         fn add_account(
             self: Pin<&mut AccountListModel>,
             display_name: &QString,
+            email: &QString,
             imap_host: &QString,
             imap_port: i32,
             username: &QString,
@@ -408,6 +409,7 @@ impl qobject::AccountListModel {
     pub fn add_account(
         self: Pin<&mut Self>,
         display_name: &cxx_qt_lib::QString,
+        email: &cxx_qt_lib::QString,
         imap_host: &cxx_qt_lib::QString,
         imap_port: i32,
         username: &cxx_qt_lib::QString,
@@ -416,6 +418,7 @@ impl qobject::AccountListModel {
         smtp_port: i32,
     ) -> bool {
         let display_name = qstring_to_string(display_name);
+        let email = qstring_to_string(email);
         let imap_host = qstring_to_string(imap_host);
         let username = qstring_to_string(username);
         let password = qstring_to_string(password);
@@ -423,6 +426,7 @@ impl qobject::AccountListModel {
 
         let config = AccountConfig::new(
             display_name,
+            email,
             imap_host,
             imap_port as u16,
             username,
@@ -480,6 +484,7 @@ impl qobject::AccountListModel {
 
         let config = AccountConfig::new(
             "Validation Test".into(),
+            "".into(),
             imap_host,
             imap_port as u16,
             username,
