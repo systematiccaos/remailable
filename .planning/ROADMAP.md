@@ -55,7 +55,7 @@
 **Plans**: 3 plans
 - [x] 03-01 — Rust data layer: MIME parsing, HTML sanitization, search, threads, attachment metadata, IMAP flag sync
 - [x] 03-02 — CXX-Qt bridge + core reading UI: folder navigation, email list, plain text viewing, read/unread sync
-- [ ] 03-03 — Advanced features: HTML rendering, thread grouping, search, attachments, PDF inline viewing
+- [x] 03-03 — Advanced features: HTML rendering, thread grouping, search, attachments, PDF inline viewing
 **UI hint**: yes
 
 ## Progress

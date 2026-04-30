@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-last_updated: "2026-04-30T07:48:22.341Z"
+status: completed
+last_updated: "2026-04-30T08:22:42.619Z"
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
-  completed_plans: 7
+  completed_plans: 8
 ---
 
 # STATE: remailable
@@ -18,24 +18,24 @@ progress:
 ## Project Reference
 
 **Core Value:** Reading and replying to email on a reMarkable Paper Pro tablet, offline-first, with native-quality e-ink UX
-**Current Focus:** Phase 03 — read-view
+**Current Focus:** Phase 03 — read-view (COMPLETE)
 
 ## Current Position
 
-Phase: 03 (read-view) — EXECUTING
-Plan: 3 of 3
+Phase: 03 (read-view) — COMPLETED
+Plan: 3 of 3 (ALL COMPLETE)
 **Phase:** 3
-**Plan:** 03-02 COMPLETED → Next: 03-03
-**Status:** Executing Phase 03
+**Plan:** 03-03 COMPLETED
+**Status:** Phase 03 complete, ready for Phase 04
 
 ## Performance Metrics
 
 | Metric | Value |
 |--------|-------|
-| Phases completed | 2 / 4 |
-| Requirements shipped | 6 / 26 |
-| Plans executed | 6 |
-| Sessions on project | 7 |
+| Phases completed | 3 / 4 |
+| Requirements shipped | 12 / 26 |
+| Plans executed | 9 |
+| Sessions on project | 8 |
 | Phase 01-bootstrap-ci P01 | 14 min | 2 tasks | 11 files |
 | Phase 01-bootstrap-ci P02 | 7 min | 2 tasks | 6 files |
 | Phase 02-connect-sync P01 | 18 min | 2 tasks | 6 files |
@@ -43,7 +43,8 @@ Plan: 3 of 3
 | Phase 02-connect-sync P03 | 12 min | 2 tasks | 9 files |
 | Phase 03-read-view P01 | 17 min | 2 tasks | 5 files |
 | Phase 03-read-view P02 | 13 min | 2 tasks | 6 files |
-| Phase 03-read-view P02 | 13min | 2 tasks | 6 files |
+| Phase 03-read-view P03 | 27 min | 2 tasks | 8 files |
+| Phase 03-read-view P03 | 27min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -79,9 +80,14 @@ Plan: 3 of 3
 - Plan 03-02: TextArea with RichText format as universal HTML renderer for e-ink (QtWebView may not be available on Paper Pro)
 - Plan 03-02: select_folder returns void, QML reads get_folder_name and sets appModel.selected_folder
 - Plan 03-02: Two-phase borrow pattern for toggle_email_read (rust() then rust_mut())
-- [Phase 03-read-view]: TextArea with RichText format as universal HTML renderer for e-ink (QtWebView may not be available on Paper Pro)
-- [Phase 03-read-view]: select_folder returns void — QML reads get_folder_name and sets appModel.selected_folder (decoupled models)
-- [Phase 03-read-view]: Two-phase borrow pattern for toggle_email_read: rust() for read then rust_mut() for write
+- Plan 03-03: EmailListModel caches account_id internally for search/clear operations (avoids re-passing from QML)
+- Plan 03-03: refresh_threaded loads flat list with thread_id — QML visualizes threading via indent prefix
+- Plan 03-03: HTML/plain text toggle via show_html()/show_plain_text() invokables toggling email_content_type
+- Plan 03-03: PDF fallback with file path display (Qt.labs.pdf may not be on Paper Pro)
+- Plan 03-03: Attachment download copies from attachments/ to downloads/ dir with DB status update
+- Plan 03-03: SearchBar is a standalone QML component embedded in EmailList for reusability
+- [Phase 03-read-view]: EmailListModel caches account_id internally for search/clear operations (avoids re-passing from QML)
+- [Phase 03-read-view]: PDF fallback with file path display (Qt.labs.pdf may not be on Paper Pro, system viewer recommended)
 
 ### Active Todos
 
@@ -92,6 +98,7 @@ Plan: 3 of 3
 - [x] Plan 02-03: CXX-Qt bridge and QML UI for account management and sync status
 - [x] Plan 03-01: Extend Rust backend for reading, threads, search, and attachments
 - [x] Plan 03-02: CXX-Qt bridge QObjects and QML screens for folder nav, email list, reader
+- [x] Plan 03-03: Search, thread grouping, HTML toggle, attachment handling, PDF view
 
 ### Blockers
 
@@ -99,6 +106,6 @@ Plan: 3 of 3
 
 ## Session Continuity
 
-**Last action:** Completed 03-02-PLAN.md (CXX-Qt bridge QObjects and QML screens for folder nav, email list, reader)
-**Next step:** Plan 03-03 (search UI, attachment handling, inline PDF viewer)
-**Carry-forward:** CXX-Qt 0.8 API, Qt 6 for local dev, Lazy<Mutex<Storage>> bridge pattern, EmailMetadata with content_type/in_reply_to/thread_id/has_attachments, AttachmentMetadata, index-based model getters (FolderListModel, EmailListModel, EmailReaderModel), RichText HTML fallback for e-ink, select_folder QML-side pattern, two-phase borrow for toggle_email_read, Loader source navigation pattern
+**Last action:** Completed 03-03-PLAN.md (search, thread grouping, HTML toggle, attachment handling, PDF view)
+**Next step:** Phase 04 — compose-reply (email composition and SMTP sending)
+**Carry-forward:** CXX-Qt 0.8 API, Qt 6 for local dev, Lazy<Mutex<Storage>> bridge pattern, EmailListModel with search/thread modes, AttachmentListModel with download, EmailReaderModel with HTML toggle, SearchBar/AttachmentList QML components, e-ink design patterns (28px headers, 20px body, 44px touch, high contrast, monochrome)
