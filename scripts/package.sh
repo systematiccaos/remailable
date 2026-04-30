@@ -30,6 +30,21 @@ cp "$PROJECT_ROOT/packaging/icon.png" "$PKG_DIR/icon.png"
 # Copy QML frontend files (new AppLoad frontend, not CXX-Qt)
 cp "$PROJECT_ROOT/qml/frontend/"*.qml "$PKG_DIR/qml/"
 
+# Compile QML resources into .rcc (Qt resource compiler)
+# This is required by AppLoad for QML apps
+QRC_FILE="$PROJECT_ROOT/qml/frontend/application.qrc"
+RCC_PATH="${RCC:-/opt/codex/rm-ferrari/sysroots/x86_64-codexsdk-linux/usr/libexec/rcc}"
+if [ -f "$RCC_PATH" ]; then
+    (cd "$PROJECT_ROOT/qml/frontend" && "$RCC_PATH" --binary -o "$PKG_DIR/resources.rcc" application.qrc)
+    echo "Compiled resources.rcc"
+elif [ -f "$PROJECT_ROOT/packaging/resources.rcc" ]; then
+    # Use pre-compiled resources.rcc if available
+    cp "$PROJECT_ROOT/packaging/resources.rcc" "$PKG_DIR/resources.rcc"
+    echo "Using pre-compiled resources.rcc"
+else
+    echo "WARNING: No resources.rcc — AppLoad may fail to load QML"
+fi
+
 # Copy backend binary
 cp "$BACKEND_PATH" "$PKG_DIR/backend/remailable-backend"
 chmod +x "$PKG_DIR/backend/remailable-backend"

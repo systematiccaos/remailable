@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="qml/main.qml">main.qml</file>
+        <file alias="qml/AccountList.qml">AccountList.qml</file>
+        <file alias="qml/AccountSettings.qml">AccountSettings.qml</file>
+        <file alias="qml/FolderList.qml">FolderList.qml</file>
+        <file alias="qml/EmailList.qml">EmailList.qml</file>
+        <file alias="qml/EmailReader.qml">EmailReader.qml</file>
+    </qresource>
+</RCC>
