@@ -1,4 +1,4 @@
-use crate::account::{AccountConfig, EmailMetadata};
+use crate::account::{AccountConfig, AttachmentMetadata, EmailMetadata};
 use crate::imap_conn;
 use crate::storage::Storage;
 use uuid::Uuid;
@@ -54,6 +54,7 @@ impl<'a> SyncEngine<'a> {
 
     /// Incrementally sync a single folder for an account.
     /// Only fetches messages with UID greater than the max stored UID.
+    /// Extended in Phase 3 to also fetch BODYSTRUCTURE, thread headers, and attachment metadata.
     fn sync_folder(
         &self,
         session: &mut imap::Session<native_tls::TlsStream<std::net::TcpStream>>,
@@ -114,6 +115,28 @@ impl<'a> SyncEngine<'a> {
 
             let email_id = Uuid::new_v4().to_string();
 
+            // Fetch BODYSTRUCTURE for content type and attachment info
+            let (content_type, has_attachments, attachment_parts) = 
+                match imap_conn::fetch_bodystructure(session, uid) {
+                    Ok(structure) => {
+                        let has_att = !structure.parts.is_empty();
+                        (structure.body_content_type, has_att, structure.parts)
+                    }
+                    Err(_) => {
+                        // If BODYSTRUCTURE fails, fall back to defaults
+                        ("text/plain".to_string(), false, Vec::new())
+                    }
+                };
+
+            // Fetch thread headers (MESSAGE-ID, IN-REPLY-TO) for threading
+            let in_reply_to = match imap_conn::fetch_message_headers_for_thread(session, uid) {
+                Ok((_msg_id, in_reply)) => in_reply,
+                Err(_) => String::new(),
+            };
+
+            // Calculate thread_id
+            let thread_id = imap_conn::calculate_thread_id(&email_id, &in_reply_to);
+
             // Fetch the body for this message
             let body = imap_conn::fetch_message_body(session, uid)?;
             let body_dir = format!("remailable/bodies/{}", config.id);
@@ -128,7 +151,7 @@ impl<'a> SyncEngine<'a> {
                 .map_err(|e| format!("Failed to write body file: {}", e))?;
 
             let email = EmailMetadata {
-                id: email_id,
+                id: email_id.clone(),
                 account_id: config.id.clone(),
                 folder: folder.to_string(),
                 uid,
@@ -137,14 +160,31 @@ impl<'a> SyncEngine<'a> {
                 date,
                 read,
                 body_path,
-                content_type: String::new(),     // Will be populated by extended sync (Plan 03-01)
-                in_reply_to: String::new(),      // Will be populated by extended sync (Plan 03-01)
-                thread_id: String::new(),        // Will be populated by extended sync (Plan 03-01)
-                has_attachments: false,           // Will be populated by extended sync (Plan 03-01)
+                content_type,
+                in_reply_to,
+                thread_id,
+                has_attachments,
             };
 
             self.storage.save_email_metadata(&email)
                 .map_err(|e| format!("Failed to save email metadata: {}", e))?;
+
+            // Save attachment metadata for each attachment part
+            for part in attachment_parts {
+                let attachment = AttachmentMetadata {
+                    id: Uuid::new_v4().to_string(),
+                    email_id: email_id.clone(),
+                    account_id: config.id.clone(),
+                    filename: part.filename,
+                    content_type: part.content_type,
+                    size: part.size,
+                    part_number: part.part_number,
+                    downloaded: false,
+                    local_path: String::new(),
+                };
+                self.storage.save_attachment(&attachment)
+                    .map_err(|e| format!("Failed to save attachment metadata: {}", e))?;
+            }
         }
 
         Ok(())
@@ -155,6 +195,7 @@ impl<'a> SyncEngine<'a> {
 mod tests {
     use super::*;
     use crate::account::AccountConfig;
+    use crate::account::AttachmentMetadata;
     use crate::storage::Storage;
 
     #[test]
@@ -207,5 +248,109 @@ mod tests {
         let engine = SyncEngine::new(&storage);
         let results = engine.sync_all_accounts(&[]);
         assert!(results.is_empty());
+    }
+
+    #[test]
+    fn test_calculate_thread_id_integration() {
+        // Verify calculate_thread_id is accessible from imap_conn
+        let thread_id = imap_conn::calculate_thread_id("email-1", "<parent@example.com>");
+        assert_eq!(thread_id, "parent@example.com");
+
+        let thread_id = imap_conn::calculate_thread_id("email-2", "");
+        assert_eq!(thread_id, "email-2");
+    }
+
+    #[test]
+    fn test_storage_stores_new_fields() {
+        // Verify storage can save and retrieve emails with new fields
+        let storage = Storage::open(":memory:").unwrap();
+        let account = AccountConfig::new(
+            "Test".into(),
+            "imap.example.com".into(),
+            993,
+            "user@example.com".into(),
+            "pass".into(),
+            "smtp.example.com".into(),
+            587,
+        );
+        storage.save_account(&account).unwrap();
+
+        let email = EmailMetadata {
+            id: "email-ext-1".into(),
+            account_id: account.id.clone(),
+            folder: "INBOX".into(),
+            uid: 1,
+            subject: "HTML Email".into(),
+            from_addr: "sender@test.com".into(),
+            date: "2026-01-01".into(),
+            read: false,
+            body_path: "/tmp/body.html".into(),
+            content_type: "text/html".into(),
+            in_reply_to: "<parent@msg.id>".into(),
+            thread_id: "parent@msg.id".into(),
+            has_attachments: true,
+        };
+        storage.save_email_metadata(&email).unwrap();
+
+        let retrieved = storage.get_email("email-ext-1").unwrap().unwrap();
+        assert_eq!(retrieved.content_type, "text/html");
+        assert_eq!(retrieved.in_reply_to, "<parent@msg.id>");
+        assert_eq!(retrieved.thread_id, "parent@msg.id");
+        assert!(retrieved.has_attachments);
+
+        // Thread grouping should work
+        let thread = storage.list_thread("parent@msg.id").unwrap();
+        assert_eq!(thread.len(), 1);
+    }
+
+    #[test]
+    fn test_storage_stores_attachment_metadata() {
+        // Verify storage can save and retrieve attachment metadata
+        let storage = Storage::open(":memory:").unwrap();
+        let account = AccountConfig::new(
+            "Test".into(),
+            "imap.example.com".into(),
+            993,
+            "user@example.com".into(),
+            "pass".into(),
+            "smtp.example.com".into(),
+            587,
+        );
+        storage.save_account(&account).unwrap();
+
+        let email = EmailMetadata {
+            id: "email-att-1".into(),
+            account_id: account.id.clone(),
+            folder: "INBOX".into(),
+            uid: 1,
+            subject: "With Attachment".into(),
+            from_addr: "a@b.com".into(),
+            date: "2026-01-01".into(),
+            read: false,
+            body_path: String::new(),
+            content_type: "text/plain".into(),
+            in_reply_to: String::new(),
+            thread_id: "email-att-1".into(),
+            has_attachments: true,
+        };
+        storage.save_email_metadata(&email).unwrap();
+
+        let attachment = AttachmentMetadata {
+            id: "att-sync-1".into(),
+            email_id: "email-att-1".into(),
+            account_id: account.id.clone(),
+            filename: "invoice.pdf".into(),
+            content_type: "application/pdf".into(),
+            size: 4096,
+            part_number: "2".into(),
+            downloaded: false,
+            local_path: String::new(),
+        };
+        storage.save_attachment(&attachment).unwrap();
+
+        let attachments = storage.list_attachments("email-att-1").unwrap();
+        assert_eq!(attachments.len(), 1);
+        assert_eq!(attachments[0].filename, "invoice.pdf");
+        assert_eq!(attachments[0].part_number, "2");
     }
 }

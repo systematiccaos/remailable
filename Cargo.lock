@@ -1170,6 +1170,7 @@ dependencies = [
  "lettre",
  "native-tls",
  "once_cell",
+ "regex",
  "rusqlite",
  "serde",
  "serde_json",
