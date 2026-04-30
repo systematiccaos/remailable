@@ -18,10 +18,13 @@ RUN apt-get update && apt-get install -y \
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# SDK will be mounted at /opt/codex/rm-ferrari at runtime
-RUN echo 'if [ -f /opt/codex/rm-ferrari/environment-setup-cortexa53-crypto-remarkable-linux ]; then' >> /root/.bashrc \
-    && echo '  source /opt/codex/rm-ferrari/environment-setup-cortexa53-crypto-remarkable-linux' >> /root/.bashrc \
-    && echo 'fi' >> /root/.bashrc
+# The reMarkable Yocto SDK hardcodes /usr/local/oe-sdk-hardcoded-buildpath as its
+# installation prefix in ELF binaries (INTERP, RPATH). When we mount the SDK at a
+# different path, those binaries can't find their dynamic linker. We create the
+# expected directory as a symlink to wherever the SDK is actually mounted so the
+# cross-compiler and qmake can execute.
+RUN mkdir -p /usr/local/oe-sdk-hardcoded-buildpath && \
+    ln -sf /opt/codex/rm-ferrari/sysroots /usr/local/oe-sdk-hardcoded-buildpath/sysroots
 
 WORKDIR /build
 CMD ["bash"]
