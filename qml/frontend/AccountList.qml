@@ -6,9 +6,11 @@ Item {
     id: accountList
     property var backend: null
     property var appState: null
+    property var sendRequestFunc: null
 
     function setBackend(b) { accountList.backend = b }
     function setAppState(s) { accountList.appState = s }
+    function setSendRequest(fn) { accountList.sendRequestFunc = fn }
 
     ColumnLayout {
         anchors.fill: parent
@@ -30,6 +32,33 @@ Item {
                     font.pixelSize: 28
                     font.bold: true
                     Layout.fillWidth: true
+                }
+
+                // Sync button
+                Rectangle {
+                    height: 44
+                    width: 80
+                    color: syncMouse.pressed ? "#cccccc" : "#e0e0e0"
+                    border.color: "#999999"
+                    border.width: 1
+                    radius: 4
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: appState.syncStatus === "syncing" ? "..." : "Sync"
+                        font.pixelSize: 16
+                        font.bold: true
+                    }
+
+                    MouseArea {
+                        id: syncMouse
+                        anchors.fill: parent
+                        onClicked: {
+                            if (sendRequestFunc) {
+                                sendRequestFunc("sync", {}, function(resp) {})
+                            }
+                        }
+                    }
                 }
 
                 // Add account button
@@ -68,7 +97,7 @@ Item {
             delegate: Rectangle {
                 width: listView.width
                 height: 80
-                color: ma.pressed ? "#f0f0f0" : "#ffffff"
+                color: "#ffffff"
                 border.color: "#e0e0e0"
                 border.width: 1
 
@@ -76,6 +105,7 @@ Item {
                     anchors.fill: parent
                     anchors.margins: 12
 
+                    // Account info — tappable to open folders
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 4
@@ -87,7 +117,7 @@ Item {
                         }
 
                         Text {
-                            text: modelData.imap_host || ""
+                            text: modelData.email || modelData.imap_host || ""
                             font.pixelSize: 14
                             color: "#666666"
                         }
@@ -139,22 +169,11 @@ Item {
                             id: delMouse
                             anchors.fill: parent
                             onClicked: {
-                                var payload = JSON.stringify({
-                                    "action": "remove_account",
-                                    "params": {"id": modelData.id},
-                                    "id": 0
-                                })
-                                backend.sendMessage(1, payload)
+                                if (sendRequestFunc) {
+                                    sendRequestFunc("remove_account", {"id": modelData.id}, function(resp) {})
+                                }
                             }
                         }
-                    }
-                }
-
-                MouseArea {
-                    id: ma
-                    anchors.fill: parent
-                    onClicked: {
-                        appState.activeAccountId = modelData.id
                     }
                 }
             }

@@ -40,14 +40,23 @@ Item {
                     appState.currentView = msg.data.current_view || "account_list"
                     appState.accountCount = msg.data.account_count || 0
                     appState.syncStatus = msg.data.sync_status || "idle"
+                    if (msg.data.accounts) {
+                        appState.accounts = msg.data.accounts
+                    }
                     break
                 case "accounts_changed":
                     sendRequest("get_accounts", {}, function(resp) {
-                        if (resp.accounts) {
-                            appState.accounts = resp.accounts
-                            appState.accountCount = resp.accounts.length
+                        var accountsData = resp.data ? resp.data.accounts : resp.accounts
+                        if (accountsData) {
+                            appState.accounts = accountsData
+                            appState.accountCount = accountsData.length
                         }
                     })
+                    break
+                case "sync_status":
+                    if (msg.data) {
+                        appState.syncStatus = msg.data.status || "idle"
+                    }
                     break
                 }
             }
@@ -80,6 +89,8 @@ Item {
         property var accounts: []
         property string activeAccountId: ""
         property string activeAccountName: ""
+        property string activeFolder: "INBOX"
+        property string activeEmailId: ""
     }
 
     // Background
@@ -109,6 +120,9 @@ Item {
             }
             if (item && item.setAppState) {
                 item.setAppState(appState)
+            }
+            if (item && item.setSendRequest) {
+                item.setSendRequest(sendRequest)
             }
         }
     }

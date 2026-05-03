@@ -5,9 +5,11 @@ Item {
     id: settings
     property var backend: null
     property var appState: null
+    property var sendRequestFunc: null
 
     function setBackend(b) { settings.backend = b }
     function setAppState(s) { settings.appState = s }
+    function setSendRequest(fn) { settings.sendRequestFunc = fn }
 
     // Form fields
     property string displayName: ""
@@ -148,23 +150,20 @@ Item {
                 id: saveMouse
                 anchors.fill: parent
                 onClicked: {
-                    var id = appState._nextId || 1
-                    var payload = JSON.stringify({
-                        "action": "add_account",
-                        "params": {
-                            "display_name": displayName,
-                            "email": emailAddr,
-                            "imap_host": imapHost,
-                            "imap_port": parseInt(imapPort) || 993,
-                            "smtp_host": smtpHost,
-                            "smtp_port": parseInt(smtpPort) || 587,
-                            "username": username,
-                            "password": password
-                        },
-                        "id": id
+                    sendRequestFunc("add_account", {
+                        "display_name": displayName,
+                        "email": emailAddr,
+                        "imap_host": imapHost,
+                        "imap_port": parseInt(imapPort) || 993,
+                        "smtp_host": smtpHost,
+                        "smtp_port": parseInt(smtpPort) || 587,
+                        "username": username,
+                        "password": password
+                    }, function(resp) {
+                        if (resp.data && resp.data.success) {
+                            appState.currentView = "account_list"
+                        }
                     })
-                    backend.sendMessage(1, payload)
-                    appState.currentView = "account_list"
                 }
             }
         }
