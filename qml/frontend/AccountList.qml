@@ -89,17 +89,22 @@ Item {
 
                     ColumnLayout {
                         Layout.fillWidth: true
+                        Layout.maximumWidth: parent.width * 0.5
                         spacing: 6
 
                         Text {
                             text: modelData.display_name || modelData.email || "Unknown"
                             font.pixelSize: 33; font.bold: true; color: "#2c2c2c"
+                            elide: Text.ElideRight; Layout.fillWidth: true
                         }
                         Text {
                             text: modelData.email || modelData.imap_host || ""
                             font.pixelSize: 27; color: "#7a7368"
+                            elide: Text.ElideRight; Layout.fillWidth: true
                         }
                     }
+
+                    Item { Layout.fillWidth: true }
 
                     Rectangle {
                         width: 150; height: 66
