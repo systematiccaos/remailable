@@ -1161,6 +1161,7 @@ checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 name = "remailable"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "cxx",
  "cxx-qt",
  "cxx-qt-build",
