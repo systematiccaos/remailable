@@ -1,7 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 
-// Account list — the default landing view
 Item {
     id: accountList
     property var backend: null
@@ -14,79 +13,58 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.topMargin: 48  // below sync bar
+        anchors.topMargin: 84
         spacing: 0
 
-        // Header
         Rectangle {
             Layout.fillWidth: true
-            height: 80
-            color: "#ffffff"
+            height: 126
+            color: "#faf6f0"
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 16
+                anchors.margins: 30
+                spacing: 18
 
                 Text {
                     text: "Email Accounts"
-                    font.pixelSize: 28
+                    font.pixelSize: 42
                     font.bold: true
+                    color: "#2c2c2c"
                     Layout.fillWidth: true
                 }
 
-                // Sync button
                 Rectangle {
-                    height: 44
-                    width: 80
-                    color: syncMouse.pressed ? "#cccccc" : "#e0e0e0"
-                    border.color: "#999999"
-                    border.width: 1
-                    radius: 4
-
+                    width: 150; height: 72
+                    color: syncMouse.pressed ? "#e8e4dc" : "#ffffff"
+                    border.color: "#777777"; border.width: 3
                     Text {
                         anchors.centerIn: parent
                         text: appState.syncStatus === "syncing" ? "..." : "Sync"
-                        font.pixelSize: 16
-                        font.bold: true
+                        font.pixelSize: 30; font.bold: true; color: "#2c2c2c"
                     }
-
                     MouseArea {
-                        id: syncMouse
-                        anchors.fill: parent
-                        onClicked: {
-                            if (sendRequestFunc) {
-                                sendRequestFunc("sync", {}, function(resp) {})
-                            }
-                        }
+                        id: syncMouse; anchors.fill: parent
+                        onClicked: { if (sendRequestFunc) sendRequestFunc("sync", {}, function(resp) {}) }
                     }
                 }
 
-                // Add account button
                 Rectangle {
-                    height: 44
-                    width: 44
-                    color: addMouse.pressed ? "#cccccc" : "#e0e0e0"
-                    border.color: "#999999"
-                    border.width: 1
-                    radius: 4
-
+                    width: 72; height: 72
+                    color: addMouse.pressed ? "#e8e4dc" : "#ffffff"
+                    border.color: "#777777"; border.width: 3
                     Text {
                         anchors.centerIn: parent
-                        text: "+"
-                        font.pixelSize: 28
-                        font.bold: true
+                        text: "+"; font.pixelSize: 48; font.bold: true; color: "#2c2c2c"
                     }
-
                     MouseArea {
-                        id: addMouse
-                        anchors.fill: parent
+                        id: addMouse; anchors.fill: parent
                         onClicked: appState.currentView = "account_settings"
                     }
                 }
             }
         }
 
-        // Account list
         ListView {
             id: listView
             Layout.fillWidth: true
@@ -96,51 +74,43 @@ Item {
 
             delegate: Rectangle {
                 width: listView.width
-                height: 80
+                height: 126
                 color: "#ffffff"
-                border.color: "#e0e0e0"
-                border.width: 1
+                property color borderC: "#e0dbd2"
+                Rectangle {
+                    anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
+                    height: 2; color: "#e0dbd2"
+                }
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 12
+                    anchors.margins: 24
+                    spacing: 18
 
-                    // Account info — tappable to open folders
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 4
+                        spacing: 6
 
                         Text {
                             text: modelData.display_name || modelData.email || "Unknown"
-                            font.pixelSize: 20
-                            font.bold: true
+                            font.pixelSize: 33; font.bold: true; color: "#2c2c2c"
                         }
-
                         Text {
                             text: modelData.email || modelData.imap_host || ""
-                            font.pixelSize: 14
-                            color: "#666666"
+                            font.pixelSize: 27; color: "#7a7368"
                         }
                     }
 
-                    // Folders button
                     Rectangle {
-                        height: 36
-                        width: 90
-                        color: folderMouse.pressed ? "#cccccc" : "#e0e0e0"
-                        border.color: "#999999"
-                        border.width: 1
-                        radius: 4
-
+                        width: 150; height: 66
+                        color: folderMouse.pressed ? "#e8e4dc" : "#ffffff"
+                        border.color: "#777777"; border.width: 3
                         Text {
                             anchors.centerIn: parent
-                            text: "Folders"
-                            font.pixelSize: 14
+                            text: "Folders"; font.pixelSize: 27; font.bold: true; color: "#2c2c2c"
                         }
-
                         MouseArea {
-                            id: folderMouse
-                            anchors.fill: parent
+                            id: folderMouse; anchors.fill: parent
                             onClicked: {
                                 appState.activeAccountId = modelData.id
                                 appState.activeAccountName = modelData.display_name
@@ -149,29 +119,18 @@ Item {
                         }
                     }
 
-                    // Remove button
                     Rectangle {
-                        height: 36
-                        width: 70
-                        color: delMouse.pressed ? "#ff9999" : "#ffe0e0"
-                        border.color: "#cc6666"
-                        border.width: 1
-                        radius: 4
-
+                        width: 135; height: 66
+                        color: delMouse.pressed ? "#e8d0d0" : "#ffffff"
+                        border.color: "#cc7777"; border.width: 3
                         Text {
                             anchors.centerIn: parent
-                            text: "Remove"
-                            font.pixelSize: 14
-                            color: "#cc3333"
+                            text: "Remove"; font.pixelSize: 27; font.bold: true; color: "#a03030"
                         }
-
                         MouseArea {
-                            id: delMouse
-                            anchors.fill: parent
+                            id: delMouse; anchors.fill: parent
                             onClicked: {
-                                if (sendRequestFunc) {
-                                    sendRequestFunc("remove_account", {"id": modelData.id}, function(resp) {})
-                                }
+                                if (sendRequestFunc) sendRequestFunc("remove_account", {"id": modelData.id}, function(resp) {})
                             }
                         }
                     }

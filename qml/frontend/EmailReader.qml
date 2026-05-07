@@ -9,25 +9,28 @@ Item {
 
     function setBackend(b) { emailReader.backend = b }
     function setAppState(s) { emailReader.appState = s }
-    function setSendRequest(fn) {
-        emailReader.sendRequestFunc = fn
-        loadEmail()
-    }
+    function setSendRequest(fn) { emailReader.sendRequestFunc = fn; loadEmail() }
 
     property string emailSubject: ""
     property string emailFrom: ""
     property string emailDate: ""
     property string emailBody: ""
+    property string emailContentType: "text/plain"
 
     function loadEmail() {
         if (sendRequestFunc && appState && appState.activeEmailId) {
-            sendRequestFunc("get_email_body", {"id": appState.activeEmailId}, function(resp) {
+            sendRequestFunc("get_email_body", {
+                "id": appState.activeEmailId,
+                "account_id": appState.activeAccountId || "",
+                "folder": appState.activeFolder || "INBOX"
+            }, function(resp) {
                 var data = resp.data ? resp.data : resp
                 if (data.subject !== undefined) {
                     emailSubject = data.subject || "(no subject)"
                     emailFrom = data.from || ""
                     emailDate = data.date || ""
                     emailBody = data.body || ""
+                    emailContentType = (data.content_type || "text/plain").split(";")[0].trim()
                 }
             })
         }
@@ -35,85 +38,74 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.topMargin: 48
+        anchors.topMargin: 84
         spacing: 0
 
-        // Header
         Rectangle {
             Layout.fillWidth: true
-            height: 80
-            color: "#ffffff"
+            height: 120
+            color: "#faf6f0"
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 16
+                anchors.margins: 24
+                spacing: 18
 
                 Rectangle {
-                    width: 80
-                    height: 40
-                    color: backMouse.pressed ? "#cccccc" : "#e0e0e0"
-                    border.color: "#999999"
-                    border.width: 1
-                    radius: 4
-                    Text { anchors.centerIn: parent; text: "\u2190 Back"; font.pixelSize: 16 }
+                    width: 144; height: 72
+                    color: backMouse.pressed ? "#e8e4dc" : "#ffffff"
+                    border.color: "#777777"; border.width: 3
+                    Text { anchors.centerIn: parent; text: "\u2190 Back"; font.pixelSize: 30; font.bold: true; color: "#2c2c2c" }
                     MouseArea { id: backMouse; anchors.fill: parent; onClicked: appState.currentView = "email_list" }
                 }
 
                 Text {
                     text: emailSubject
-                    font.pixelSize: 20
-                    font.bold: true
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
+                    font.pixelSize: 33; font.bold: true; color: "#2c2c2c"
+                    Layout.fillWidth: true; elide: Text.ElideRight
                 }
             }
         }
 
-        // Email headers
         Rectangle {
             Layout.fillWidth: true
-            height: 60
-            color: "#f5f5f5"
-            border.color: "#eeeeee"
-            border.width: 1
+            height: 108
+            color: "#ffffff"
+            border.color: "#e0dbd2"; border.width: 2
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 12
-                spacing: 2
+                anchors.margins: 24
+                spacing: 6
 
                 Text {
                     text: "From: " + emailFrom
-                    font.pixelSize: 14
-                    color: "#333333"
+                    font.pixelSize: 30; color: "#2c2c2c"
                 }
-
                 Text {
                     text: "Date: " + emailDate
-                    font.pixelSize: 14
-                    color: "#666666"
+                    font.pixelSize: 27; color: "#7a7368"
                 }
             }
         }
 
-        // Email body
         Flickable {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-
             contentWidth: parent.width
-            contentHeight: bodyText.height + 24
+            contentHeight: bodyText.height + 48
 
             Text {
                 id: bodyText
-                width: parent.width - 24
-                x: 12
-                y: 12
+                width: parent.width - 48
+                x: 24; y: 24
                 text: emailBody
-                font.pixelSize: 16
+                textFormat: emailContentType.indexOf("html") >= 0 ? Text.RichText : Text.PlainText
+                font.pixelSize: 30
                 wrapMode: Text.WordWrap
-                color: "#222222"
+                color: "#2c2c2c"
+                onLinkActivated: function(link) { Qt.openUrlExternally(link) }
             }
         }
     }

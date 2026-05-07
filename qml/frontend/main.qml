@@ -5,27 +5,17 @@ import net.asivery.AppLoad 1.0
 
 Item {
     id: root
-
-    // AppLoad required signals
     signal close
-    function unloading() {
-        backend.terminate()
-    }
+    function unloading() { backend.terminate() }
 
-    // AppLoad backend bridge
     AppLoad {
         id: backend
         applicationID: "remailable"
 
         onMessageReceived: function(type, contents) {
             var msg
-            try {
-                msg = JSON.parse(contents)
-            } catch(e) {
-                return
-            }
+            try { msg = JSON.parse(contents) } catch(e) { return }
 
-            // Response to a request
             if (msg.id !== undefined && _callbacks[msg.id]) {
                 var cb = _callbacks[msg.id]
                 delete _callbacks[msg.id]
@@ -33,54 +23,37 @@ Item {
                 return
             }
 
-            // Event from backend
             if (msg.event) {
                 switch (msg.event) {
                 case "initial_state":
                     appState.currentView = msg.data.current_view || "account_list"
                     appState.accountCount = msg.data.account_count || 0
                     appState.syncStatus = msg.data.sync_status || "idle"
-                    if (msg.data.accounts) {
-                        appState.accounts = msg.data.accounts
-                    }
+                    if (msg.data.accounts) appState.accounts = msg.data.accounts
                     break
                 case "accounts_changed":
                     sendRequest("get_accounts", {}, function(resp) {
-                        var accountsData = resp.data ? resp.data.accounts : resp.accounts
-                        if (accountsData) {
-                            appState.accounts = accountsData
-                            appState.accountCount = accountsData.length
-                        }
+                        var d = resp.data ? resp.data.accounts : resp.accounts
+                        if (d) { appState.accounts = d; appState.accountCount = d.length }
                     })
                     break
                 case "sync_status":
-                    if (msg.data) {
-                        appState.syncStatus = msg.data.status || "idle"
-                    }
+                    if (msg.data) appState.syncStatus = msg.data.status || "idle"
                     break
                 }
             }
         }
     }
 
-    // Request tracking
     property int _nextId: 1
     property var _callbacks: ({})
 
     function sendRequest(action, params, callback) {
         var reqId = _nextId++
-        if (callback) {
-            _callbacks[reqId] = callback
-        }
-        var payload = JSON.stringify({
-            "action": action,
-            "params": params || {},
-            "id": reqId
-        })
-        backend.sendMessage(1, payload)
+        if (callback) _callbacks[reqId] = callback
+        backend.sendMessage(1, JSON.stringify({ action: action, params: params || {}, id: reqId }))
     }
 
-    // App state
     QtObject {
         id: appState
         property string currentView: "account_list"
@@ -93,94 +66,64 @@ Item {
         property string activeEmailId: ""
     }
 
-    // Background
-    Rectangle {
-        anchors.fill: parent
-        color: "#ffffff"
-    }
+    Rectangle { anchors.fill: parent; color: "#faf6f0" }
 
-    // Main content
     Loader {
         id: contentLoader
         anchors.fill: parent
         source: {
             switch (appState.currentView) {
             case "account_settings": return "AccountSettings.qml"
-            case "folder_list": return "FolderList.qml"
-            case "email_list": return "EmailList.qml"
-            case "email_reader": return "EmailReader.qml"
-            case "account_list":
-            default: return "AccountList.qml"
+            case "folder_list":      return "FolderList.qml"
+            case "email_list":       return "EmailList.qml"
+            case "email_reader":     return "EmailReader.qml"
+            default:                 return "AccountList.qml"
             }
         }
-
         onLoaded: {
-            if (item && item.setBackend) {
-                item.setBackend(backend)
-            }
-            if (item && item.setAppState) {
-                item.setAppState(appState)
-            }
-            if (item && item.setSendRequest) {
-                item.setSendRequest(sendRequest)
-            }
+            if (item && item.setBackend)     item.setBackend(backend)
+            if (item && item.setAppState)     item.setAppState(appState)
+            if (item && item.setSendRequest)  item.setSendRequest(sendRequest)
         }
     }
 
-    // Sync status indicator at top
     Rectangle {
-        id: syncBar
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: 40
-        color: appState.syncStatus === "syncing" ? "#e0e0e0" : "#f5f5f5"
-        border.color: "#cccccc"
-        border.width: 1
+        height: 72
+        color: "#ffffff"
+        border.color: "#d4cec4"
+        border.width: 2
 
         RowLayout {
             anchors.fill: parent
-            anchors.margins: 8
+            anchors.leftMargin: 24
+            anchors.rightMargin: 12
 
             Text {
                 text: "remailable"
-                font.pixelSize: 20
+                font.pixelSize: 33
                 font.bold: true
+                color: "#2c2c2c"
                 Layout.fillWidth: true
             }
 
             Text {
-                text: appState.syncStatus === "syncing" ? "⟳ Syncing..." : "● " + appState.syncStatus
-                font.pixelSize: 14
-                color: "#666666"
+                text: appState.syncStatus === "syncing" ? "syncing..." : "idle"
+                font.pixelSize: 27
+                color: "#7a7368"
             }
 
-            // Close button
             Rectangle {
-                width: 30
-                height: 30
-                radius: 15
-                color: closeMa.pressed ? "#cccccc" : "#e0e0e0"
-                border.color: "#999999"
-                border.width: 1
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "✕"
-                    font.pixelSize: 16
-                    font.bold: true
-                }
-
-                MouseArea {
-                    id: closeMa
-                    anchors.fill: parent
-                    onClicked: root.close()
-                }
+                width: 54; height: 54
+                color: closeMa.pressed ? "#e8e4dc" : "#ffffff"
+                border.color: "#999999"; border.width: 3
+                Text { anchors.centerIn: parent; text: "✕"; font.pixelSize: 30; font.bold: true; color: "#2c2c2c" }
+                MouseArea { id: closeMa; anchors.fill: parent; onClicked: root.close() }
             }
         }
     }
 
-    Component.onCompleted: {
-        // Backend will send initial_state after SYS_NEW_FRONTEND
-    }
+    Component.onCompleted: {}
 }

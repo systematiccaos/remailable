@@ -9,11 +9,7 @@ Item {
 
     function setBackend(b) { folderList.backend = b }
     function setAppState(s) { folderList.appState = s }
-    function setSendRequest(fn) {
-        folderList.sendRequestFunc = fn
-        // Fetch folders once the function is available
-        loadFolders()
-    }
+    function setSendRequest(fn) { folderList.sendRequestFunc = fn; loadFolders() }
 
     property var folders: []
 
@@ -21,51 +17,42 @@ Item {
         if (sendRequestFunc && appState && appState.activeAccountId) {
             sendRequestFunc("get_folders", {"account_id": appState.activeAccountId}, function(resp) {
                 var data = resp.data ? resp.data : resp
-                if (data.folders) {
-                    folders = data.folders
-                }
+                if (data.folders) folders = data.folders
             })
         }
     }
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.topMargin: 48
+        anchors.topMargin: 84
         spacing: 0
 
-        // Header with back button
         Rectangle {
             Layout.fillWidth: true
-            height: 80
-            color: "#ffffff"
+            height: 126
+            color: "#faf6f0"
 
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 16
+                anchors.margins: 30
+                spacing: 18
 
                 Rectangle {
-                    width: 80
-                    height: 40
-                    color: backMouse.pressed ? "#cccccc" : "#e0e0e0"
-                    border.color: "#999999"
-                    border.width: 1
-                    radius: 4
-
-                    Text { anchors.centerIn: parent; text: "\u2190 Back"; font.pixelSize: 16 }
-
+                    width: 144; height: 72
+                    color: backMouse.pressed ? "#e8e4dc" : "#ffffff"
+                    border.color: "#777777"; border.width: 3
+                    Text { anchors.centerIn: parent; text: "\u2190 Back"; font.pixelSize: 30; font.bold: true; color: "#2c2c2c" }
                     MouseArea { id: backMouse; anchors.fill: parent; onClicked: appState.currentView = "account_list" }
                 }
 
                 Text {
                     text: (appState && appState.activeAccountName) || "Folders"
-                    font.pixelSize: 28
-                    font.bold: true
+                    font.pixelSize: 42; font.bold: true; color: "#2c2c2c"
                     Layout.fillWidth: true
                 }
             }
         }
 
-        // Folder list from backend
         ListView {
             id: listView
             Layout.fillWidth: true
@@ -75,22 +62,23 @@ Item {
 
             delegate: Rectangle {
                 width: listView.width
-                height: 70
-                color: folderMouse.pressed ? "#e0e0e0" : "#ffffff"
-                border.color: "#eeeeee"
-                border.width: 1
+                height: 108
+                color: folderMouse.pressed ? "#e8e4dc" : "#ffffff"
+
+                Rectangle {
+                    anchors.bottom: parent.bottom; anchors.left: parent.left; anchors.right: parent.right
+                    height: 2; color: "#e0dbd2"
+                }
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    anchors.leftMargin: 24
+                    anchors.left: parent.left; anchors.leftMargin: 36
                     text: modelData.name || "Unknown"
-                    font.pixelSize: 22
+                    font.pixelSize: 36; font.bold: true; color: "#2c2c2c"
                 }
 
                 MouseArea {
-                    id: folderMouse
-                    anchors.fill: parent
+                    id: folderMouse; anchors.fill: parent
                     onClicked: {
                         appState.activeFolder = modelData.name
                         appState.currentView = "email_list"
@@ -99,17 +87,15 @@ Item {
             }
         }
 
-        // Empty state
         Item {
             Layout.fillWidth: true
-            Layout.fillHeight: folders.length === 0 ? parent.height * 0.5 : 0
+            Layout.fillHeight: folders.length === 0
             visible: folders.length === 0
 
             Text {
                 anchors.centerIn: parent
                 text: "No folders yet\nTap Sync to fetch emails"
-                font.pixelSize: 18
-                color: "#999999"
+                font.pixelSize: 33; color: "#a09890"
                 horizontalAlignment: Text.AlignHCenter
             }
         }
