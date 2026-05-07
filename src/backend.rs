@@ -14,6 +14,7 @@ use account::{AccountConfig, EmailMetadata};
 use serde_json::{json};
 
 use appload::{AppLoadClient, MSG_REQUEST, SYS_NEW_FRONTEND, SYS_TERMINATE};
+use base64::Engine;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -249,17 +250,54 @@ fn handle_request(
         "get_email_body" => {
             if let Some(params) = &msg.params {
                 let email_id = params.get("id").and_then(|v| v.as_str()).unwrap_or("");
+                let _account_id = params.get("account_id").and_then(|v| v.as_str()).unwrap_or("");
+                let _folder = params.get("folder").and_then(|v| v.as_str()).unwrap_or("INBOX");
                 let email = storage.lock().unwrap().get_email(email_id).ok().flatten();
                 let c = client.lock().unwrap();
                 if let Some(e) = email {
-                    let body = std::fs::read_to_string(&e.body_path).unwrap_or_else(|_| "(body not available)".to_string());
+                    let raw = std::fs::read_to_string(&e.body_path).unwrap_or_default();
+                    let parsed = parse_email_body(&raw);
+                    
+                    let mut body = parsed.body;
+                    let mut content_type = parsed.content_type;
+                    
+                    // If we only have headers (content is empty), try to fetch the full body from IMAP
+                    if body.trim().is_empty() || body.starts_with("* ") {
+                        // Try to fetch full body from IMAP
+                        if let Some(account) = storage.lock().unwrap().get_account(&e.account_id).ok().flatten() {
+                            match imap_fetch_body(&account, &e.folder, e.uid, data_dir) {
+                                Ok(fetched) => {
+                                    body = fetched.body;
+                                    content_type = fetched.content_type;
+                                }
+                                Err(err) => {
+                                    eprintln!("get_email_body: IMAP fetch failed: {}", err);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Sanitize content_type — strip charset and other parameters
+                    if let Some(idx) = content_type.find(';') {
+                        content_type = content_type[..idx].trim().to_string();
+                    }
+                    // If we extracted HTML from multipart, mark as text/html
+                    if content_type.starts_with("multipart/") && (body.contains("<html") || body.contains("<body") || body.contains("<p>")) {
+                        content_type = "text/html".to_string();
+                    }
+                    
+                    // Sanitize HTML for e-ink rendering
+                    if content_type == "text/html" {
+                        body = sanitize_html(&body);
+                    }
+                   
                     let _ = c.send_response(id, json!({
                         "id": e.id,
                         "subject": e.subject,
                         "from": e.from_addr,
                         "date": e.date,
                         "body": body,
-                        "content_type": e.content_type,
+                        "content_type": content_type,
                         "has_attachments": e.has_attachments,
                     }));
                 } else {
@@ -545,4 +583,349 @@ fn parse_email_headers(raw: &[u8]) -> ParsedHeaders {
     }
 
     ParsedHeaders { subject, from, date, in_reply_to }
+}
+
+/// Parsed email body from raw file data
+struct ParsedBody {
+    body: String,
+    content_type: String, // "text/html" or "text/plain"
+}
+
+/// Parse email body from stored raw data.
+/// The stored data could be:
+/// 1. Raw IMAP FETCH response with RFC822.HEADER only (no body — need on-demand fetch)
+/// 2. Raw IMAP FETCH response with full RFC822 (headers + body)
+/// 3. Raw RFC822 email (headers + body, no IMAP wrapper)
+fn parse_email_body(raw: &str) -> ParsedBody {
+    // Case 1 & 2: Raw IMAP response
+    if raw.starts_with("* ") && raw.contains("FETCH") {
+        // Check if this is a header-only response (RFC822.HEADER) or full (RFC822 or BODY[])
+        let is_header_only = raw.contains("RFC822.HEADER") && !raw.contains("RFC822 ") && !raw.contains("BODY[]");
+        
+        // Find the literal marker {size}\r\n
+        // For IMAP FETCH, the literal marker is right after the data item name
+        // We need the FIRST { that's part of the IMAP literal, not ones inside the email
+        let lit_start = if let Some(fetch_pos) = raw.find("FETCH") {
+            raw[fetch_pos..].find('{').map(|pos| fetch_pos + pos)
+        } else {
+            raw.find('{')
+        };
+        
+        if let Some(lit_start) = lit_start {
+            if let Some(lit_end) = raw[lit_start..].find("}\r\n") {
+                let size_str = &raw[lit_start + 1..lit_start + lit_end];
+                let literal_size: usize = size_str.parse().unwrap_or(0);
+                let data_start = lit_start + lit_end + 3;
+                if data_start >= raw.len() {
+                    return ParsedBody { body: String::new(), content_type: "text/plain".to_string() };
+                }
+                let literal_end = (data_start + literal_size).min(raw.len());
+                let literal_data = &raw[data_start..literal_end];
+                
+                if is_header_only {
+                    // We only have headers, no body content.
+                    let headers = literal_data;
+                    let is_html = headers.to_lowercase().contains("content-type: text/html")
+                        || headers.to_lowercase().contains("content-type: multipart/");
+                    return ParsedBody {
+                        body: String::new(), // No body content available
+                        content_type: if is_html { "text/html".to_string() } else { "text/plain".to_string() },
+                    };
+                }
+                
+                // Full RFC822 message: headers + \r\n\r\n + body
+                let body_start = match literal_data.find("\r\n\r\n") {
+                    Some(pos) => pos + 4,
+                    None => match literal_data.find("\n\n") {
+                        Some(pos) => pos + 2,
+                        None => 0,
+                    }
+                };
+                
+                let headers = &literal_data[..body_start.min(literal_data.len())];
+                let raw_body = if body_start < literal_data.len() {
+                    literal_data[body_start..].to_string()
+                } else {
+                    String::new()
+                };
+                
+                let content_type = detect_content_type_from_headers(headers);
+                let body_text = maybe_extract_multipart(&raw_body, headers);
+                
+                
+                return ParsedBody { body: body_text, content_type };
+            }
+        }
+        
+        // Fallback: couldn't parse literal
+        return ParsedBody { body: String::new(), content_type: "text/plain".to_string() };
+    }
+    
+    // Case 3: Raw email (headers + body, no IMAP wrapper)
+    let body_start = match raw.find("\r\n\r\n") {
+        Some(pos) => pos + 4,
+        None => match raw.find("\n\n") {
+            Some(pos) => pos + 2,
+            None => 0,
+        }
+    };
+    
+    let headers = &raw[..body_start.min(raw.len())];
+    let raw_body = if body_start < raw.len() {
+        raw[body_start..].to_string()
+    } else {
+        String::new()
+    };
+    
+    let content_type = detect_content_type_from_headers(headers);
+    let body_text = maybe_extract_multipart(&raw_body, headers);
+    
+    ParsedBody { body: body_text, content_type }
+}
+
+/// If the body is multipart, extract the best part (HTML preferred).
+/// Otherwise, decode content-transfer-encoding and return as-is.
+fn maybe_extract_multipart(body: &str, headers: &str) -> String {
+    let lower_headers = headers.to_lowercase();
+    
+    // Check if body is multipart
+    if let Some(boundary) = extract_boundary(headers) {
+        return extract_multipart_body(body, &boundary);
+    }
+    
+    // Check content-transfer-encoding for single-part messages
+    if lower_headers.contains("content-transfer-encoding: base64") {
+        return decode_base64(body);
+    } else if lower_headers.contains("content-transfer-encoding: quoted-printable") {
+        return decode_quoted_printable(body);
+    }
+    
+    body.to_string()
+}
+
+/// Detect content type from email headers
+fn detect_content_type_from_headers(headers: &str) -> String {
+    let lower = headers.to_lowercase();
+    if lower.contains("content-type: text/html") || lower.contains("content-type: multipart/") {
+        "text/html".to_string()
+    } else if lower.contains("<html") || lower.contains("<!doctype html") || lower.contains("<body") {
+        "text/html".to_string()
+    } else {
+        "text/plain".to_string()
+    }
+}
+
+/// Extract boundary string from Content-Type header (preserves original case)
+fn extract_boundary(headers: &str) -> Option<String> {
+    let lower = headers.to_lowercase();
+    if let Some(pos) = lower.find("boundary=") {
+        // Use the position from the lowercase version to index into the original headers
+        let after = &headers[pos + 9..];
+        // Strip quotes if present
+        let after = after.trim_start_matches('"');
+        let boundary: String = after.chars().take_while(|c| *c != ';' && *c != '"' && *c != '\r' && *c != '\n' && *c != ' ').collect();
+        if !boundary.is_empty() {
+            return Some(boundary);
+        }
+    }
+    None
+}
+
+/// Extract the best body part from a MIME multipart body.
+/// Prefers text/html over text/plain.
+fn extract_multipart_body(body: &str, boundary: &str) -> String {
+    let delimiter = format!("--{}", boundary);
+    let end_delimiter = format!("--{}--", boundary);
+    
+    // Split by boundary
+    let parts: Vec<&str> = body.split(&delimiter).collect();
+    
+    let mut html_part = String::new();
+    let mut plain_part = String::new();
+    
+    for part in &parts[1..] { // Skip preamble before first boundary
+        if part.starts_with("--") || part.starts_with(&end_delimiter[2..]) {
+            continue; // End boundary
+        }
+        
+        // Each part has headers and body separated by blank line
+        let (part_headers, part_body) = if let Some(pos) = part.find("\r\n\r\n") {
+            (&part[..pos], &part[pos + 4..])
+        } else if let Some(pos) = part.find("\n\n") {
+            (&part[..pos], &part[pos + 2..])
+        } else {
+            ("", *part)
+        };
+        
+        // Strip trailing \r\n from part body
+        let part_body = part_body.trim_end_matches("\r\n").trim_end_matches('\n');
+        
+        let part_lower = part_headers.to_lowercase();
+        let is_html = part_lower.contains("content-type: text/html");
+        let is_plain = part_lower.contains("content-type: text/plain");
+        
+        // Decode content-transfer-encoding
+        let decoded = if part_lower.contains("content-transfer-encoding: base64") {
+            decode_base64(part_body)
+        } else if part_lower.contains("content-transfer-encoding: quoted-printable") {
+            decode_quoted_printable(part_body)
+        } else {
+            part_body.to_string()
+        };
+        
+        if is_html && html_part.is_empty() {
+            html_part = decoded;
+        } else if is_plain && plain_part.is_empty() {
+            plain_part = decoded;
+        }
+    }
+    
+    // Prefer HTML, fall back to plain
+    if !html_part.is_empty() {
+        html_part
+    } else {
+        plain_part
+    }
+}
+
+/// Decode base64 content
+fn decode_base64(input: &str) -> String {
+    // Remove whitespace/newlines from base64 input
+    let clean: String = input.chars().filter(|c| !c.is_whitespace()).collect();
+    match base64::engine::general_purpose::STANDARD.decode(&clean) {
+        Ok(bytes) => String::from_utf8_lossy(&bytes).to_string(),
+        Err(_) => input.to_string(), // Return raw if decode fails
+    }
+}
+
+/// Decode quoted-printable content
+fn decode_quoted_printable(input: &str) -> String {
+    let mut result = String::new();
+    let mut chars = input.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '=' {
+            // Soft line break
+            if chars.peek().map_or(false, |nc| *nc == '\r' || *nc == '\n') {
+                // Skip \r\n or \n
+                if chars.peek() == Some(&'\r') {
+                    chars.next();
+                }
+                if chars.peek() == Some(&'\n') {
+                    chars.next();
+                }
+                continue;
+            }
+            // Encoded byte =XX
+            let hex1 = chars.next();
+            let hex2 = chars.next();
+            if let (Some(h1), Some(h2)) = (hex1, hex2) {
+                if let (Some(d1), Some(d2)) = (h1.to_digit(16), h2.to_digit(16)) {
+                    let byte = (d1 << 4 | d2) as u8;
+                    result.push(byte as char);
+                    continue;
+                }
+            }
+            // If hex parsing failed, just append the characters
+            result.push('=');
+            if let Some(h1) = hex1 { result.push(h1); }
+            if let Some(h2) = hex2 { result.push(h2); }
+        } else {
+            result.push(c);
+        }
+    }
+    result
+}
+
+/// Fetch the full body of a single email from IMAP
+fn imap_fetch_body(
+    account: &AccountConfig,
+    folder: &str,
+    uid: u32,
+    _data_dir: &std::path::PathBuf,
+) -> Result<ParsedBody, String> {
+    eprintln!("imap_fetch_body: fetching UID {} from {}/{}", uid, account.email, folder);
+    
+    let tls = native_tls::TlsConnector::new()
+        .map_err(|e| format!("TLS init failed: {}", e))?;
+    
+    let client = imap::connect(
+        (account.imap_host.as_str(), account.imap_port),
+        account.imap_host.as_str(),
+        &tls,
+    ).map_err(|e| format!("IMAP connect failed: {}", e))?;
+    
+    let mut session = client
+        .login(&account.username, &account.password)
+        .map_err(|e| format!("IMAP login failed: {}", e.0))?;
+    
+    session.select(folder)
+        .map_err(|e| format!("IMAP SELECT failed: {}", e))?;
+    
+    // Fetch full RFC822 message using raw command
+    let command = format!("UID FETCH {} (RFC822)", uid);
+    let raw_response = session.run_command_and_read_response(&command)
+        .map_err(|e| format!("IMAP FETCH failed: {}", e))?;
+    
+    let _ = session.logout();
+    
+    // Parse the full email
+    let response_str = String::from_utf8_lossy(&raw_response);
+    let parsed = parse_email_body(&response_str);
+    
+    Ok(parsed)
+}
+
+/// Sanitize HTML for e-ink rendering.
+/// Qt's Text.RichText does NOT support <style> blocks — they render as visible text.
+/// Instead we strip them and inject inline styles + attribute cleanup.
+fn sanitize_html(html: &str) -> String {
+    let mut result = html.to_string();
+    
+    let script_re = regex::Regex::new(r"(?is)<script[^>]*>.*?</script>").unwrap();
+    result = script_re.replace_all(&result, "").to_string();
+    let iframe_re = regex::Regex::new(r"(?is)<iframe[^>]*>.*?</iframe>").unwrap();
+    result = iframe_re.replace_all(&result, "").to_string();
+    let object_re = regex::Regex::new(r"(?is)<object[^>]*>.*?</object>").unwrap();
+    result = object_re.replace_all(&result, "").to_string();
+    let embed_re = regex::Regex::new(r"(?is)<embed[^>]*>").unwrap();
+    result = embed_re.replace_all(&result, "").to_string();
+    let applet_re = regex::Regex::new(r"(?is)<applet[^>]*>.*?</applet>").unwrap();
+    result = applet_re.replace_all(&result, "").to_string();
+    
+    let style_block_re = regex::Regex::new(r"(?is)<style[^>]*>.*?</style>").unwrap();
+    result = style_block_re.replace_all(&result, "").to_string();
+    let link_css_re = regex::Regex::new(r#"(?i)<link[^>]*stylesheet[^>]*>"#).unwrap();
+    result = link_css_re.replace_all(&result, "").to_string();
+    
+    let table_re = regex::Regex::new(r"(?i)<(table)([^>]*)").unwrap();
+    result = table_re.replace_all(&result, r#"<$1$2 style="border:1px solid #333;border-collapse:collapse""#).to_string();
+    let td_re = regex::Regex::new(r"(?i)<(t[dh])([^>]*)").unwrap();
+    result = td_re.replace_all(&result, r#"<$1$2 style="border:1px solid #333;padding:4px 8px;color:#222""#).to_string();
+
+    let bgcolor_re = regex::Regex::new(r#"(?i)\sbgcolor\s*=\s*["'][^"']*["']"#).unwrap();
+    result = bgcolor_re.replace_all(&result, r###" bgcolor="#eeeeee""###).to_string();
+    
+    let style_attr_re = regex::Regex::new(r#"(?i)\sstyle\s*=\s*"([^"]*)"|\sstyle\s*=\s*'([^']*)'"#).unwrap();
+    result = style_attr_re.replace_all(&result, |caps: &regex::Captures| {
+        let val = caps.get(1).or_else(|| caps.get(2)).map(|m| m.as_str()).unwrap_or("");
+        let fixed = fix_inline_style(val);
+        format!(r#" style="{}""#, fixed)
+    }).to_string();
+
+    result
+}
+
+fn fix_inline_style(style: &str) -> String {
+    let lower = style.to_lowercase();
+    if lower.contains("white") || lower.contains("#fff") || lower.contains("#ffffff")
+       || lower.contains("#eee") || lower.contains("#f5f5")
+    {
+        let color_re = regex::Regex::new(r#"(?i)color\s*:\s*[^;]+"#).unwrap();
+        let mut s = color_re.replace_all(style, "color:#222").to_string();
+        let bg_re = regex::Regex::new(r#"(?i)background(?:-color)?\s*:\s*[^;]+"#).unwrap();
+        s = bg_re.replace_all(&s, "background-color:transparent").to_string();
+        s
+    } else {
+        style.to_string()
+    }
 }
