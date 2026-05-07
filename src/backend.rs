@@ -897,14 +897,6 @@ fn sanitize_html(html: &str) -> String {
     let link_css_re = regex::Regex::new(r#"(?i)<link[^>]*stylesheet[^>]*>"#).unwrap();
     result = link_css_re.replace_all(&result, "").to_string();
     
-    let table_re = regex::Regex::new(r"(?i)<(table)([^>]*)").unwrap();
-    result = table_re.replace_all(&result, r#"<$1$2 style="border:1px solid #333;border-collapse:collapse""#).to_string();
-    let td_re = regex::Regex::new(r"(?i)<(t[dh])([^>]*)").unwrap();
-    result = td_re.replace_all(&result, r#"<$1$2 style="border:1px solid #333;padding:4px 8px;color:#222""#).to_string();
-
-    let bgcolor_re = regex::Regex::new(r#"(?i)\sbgcolor\s*=\s*["'][^"']*["']"#).unwrap();
-    result = bgcolor_re.replace_all(&result, r###" bgcolor="#eeeeee""###).to_string();
-    
     let style_attr_re = regex::Regex::new(r#"(?i)\sstyle\s*=\s*"([^"]*)"|\sstyle\s*=\s*'([^']*)'"#).unwrap();
     result = style_attr_re.replace_all(&result, |caps: &regex::Captures| {
         let val = caps.get(1).or_else(|| caps.get(2)).map(|m| m.as_str()).unwrap_or("");
@@ -917,14 +909,9 @@ fn sanitize_html(html: &str) -> String {
 
 fn fix_inline_style(style: &str) -> String {
     let lower = style.to_lowercase();
-    if lower.contains("white") || lower.contains("#fff") || lower.contains("#ffffff")
-       || lower.contains("#eee") || lower.contains("#f5f5")
-    {
+    if lower.contains("white") || lower.contains("#fff") || lower.contains("#ffffff") {
         let color_re = regex::Regex::new(r#"(?i)color\s*:\s*[^;]+"#).unwrap();
-        let mut s = color_re.replace_all(style, "color:#222").to_string();
-        let bg_re = regex::Regex::new(r#"(?i)background(?:-color)?\s*:\s*[^;]+"#).unwrap();
-        s = bg_re.replace_all(&s, "background-color:transparent").to_string();
-        s
+        color_re.replace_all(style, "color:#222").to_string()
     } else {
         style.to_string()
     }
