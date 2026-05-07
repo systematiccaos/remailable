@@ -764,14 +764,18 @@ fn extract_multipart_body(body: &str, boundary: &str) -> String {
         let is_html = part_lower.contains("content-type: text/html");
         let is_plain = part_lower.contains("content-type: text/plain");
         
-        // Decode content-transfer-encoding
-        let decoded = if part_lower.contains("content-transfer-encoding: base64") {
-            decode_base64(part_body)
+        // Decode content-transfer-encoding to raw bytes
+        let decoded_bytes = if part_lower.contains("content-transfer-encoding: base64") {
+            decode_base64_to_bytes(part_body)
         } else if part_lower.contains("content-transfer-encoding: quoted-printable") {
-            decode_quoted_printable(part_body)
+            decode_quoted_printable_to_bytes(part_body)
         } else {
-            part_body.to_string()
+            part_body.as_bytes().to_vec()
         };
+        
+        // Convert bytes to string using the charset from Content-Type
+        let charset = extract_charset(part_headers);
+        let decoded = charset_decode(&decoded_bytes, &charset);
         
         if is_html && html_part.is_empty() {
             html_part = decoded;
@@ -788,14 +792,106 @@ fn extract_multipart_body(body: &str, boundary: &str) -> String {
     }
 }
 
-/// Decode base64 content
-fn decode_base64(input: &str) -> String {
-    // Remove whitespace/newlines from base64 input
+/// Decode base64 content to raw bytes
+fn decode_base64_to_bytes(input: &str) -> Vec<u8> {
     let clean: String = input.chars().filter(|c| !c.is_whitespace()).collect();
-    match base64::engine::general_purpose::STANDARD.decode(&clean) {
-        Ok(bytes) => String::from_utf8_lossy(&bytes).to_string(),
-        Err(_) => input.to_string(), // Return raw if decode fails
+    base64::engine::general_purpose::STANDARD.decode(&clean).unwrap_or_else(|_| input.as_bytes().to_vec())
+}
+
+/// Decode quoted-printable content to raw bytes
+fn decode_quoted_printable_to_bytes(input: &str) -> Vec<u8> {
+    let mut result = Vec::new();
+    let mut chars = input.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '=' {
+            if chars.peek().map_or(false, |nc| *nc == '\r' || *nc == '\n') {
+                if chars.peek() == Some(&'\r') { chars.next(); }
+                if chars.peek() == Some(&'\n') { chars.next(); }
+                continue;
+            }
+            let hex1 = chars.next();
+            let hex2 = chars.next();
+            if let (Some(h1), Some(h2)) = (hex1, hex2) {
+                if let (Some(d1), Some(d2)) = (h1.to_digit(16), h2.to_digit(16)) {
+                    result.push((d1 << 4 | d2) as u8);
+                    continue;
+                }
+            }
+            result.push(b'=');
+            if let Some(h1) = hex1 { result.push(h1 as u8); }
+            if let Some(h2) = hex2 { result.push(h2 as u8); }
+        } else {
+            result.push(c as u8);
+        }
     }
+    result
+}
+
+/// Extract charset from Content-Type header (e.g. "text/html; charset=iso-8859-1")
+fn extract_charset(headers: &str) -> String {
+    let lower = headers.to_lowercase();
+    if let Some(pos) = lower.find("charset=") {
+        let after = &headers[pos + 8..];
+        let after = after.trim_start_matches(&['"', '\''] as &[_]);
+        after.chars()
+            .take_while(|c| !c.is_whitespace() && *c != ';' && *c != '"' && *c != '\'' && *c != '\r' && *c != '\n')
+            .collect()
+    } else {
+        String::from("utf-8")
+    }
+}
+
+/// Decode bytes to UTF-8 string using the given charset label
+fn charset_decode(bytes: &[u8], charset: &str) -> String {
+    let label = charset.to_lowercase();
+    if label == "utf-8" || label == "utf8" {
+        return String::from_utf8_lossy(bytes).to_string();
+    }
+    if label == "iso-8859-1" || label == "latin1" || label == "iso8859-1" {
+        return bytes.iter().map(|&b| b as char).collect();
+    }
+    if label == "iso-8859-15" || label == "latin9" {
+        let mut s = String::with_capacity(bytes.len());
+        for &b in bytes {
+            s.push(match b {
+                0xA4 => '\u{20AC}', // €
+                0xA6 => '\u{0160}', // Š
+                0xA8 => '\u{0161}', // š
+                0xB4 => '\u{017D}', // Ž
+                0xB8 => '\u{017E}', // ž
+                0xBC => '\u{0152}', // Œ
+                0xBD => '\u{0153}', // œ
+                0xBE => '\u{0178}', // Ÿ
+                _ => b as char,
+            });
+        }
+        return s;
+    }
+    if label == "windows-1252" || label == "cp1252" || label == "windows1252" {
+        let mut s = String::with_capacity(bytes.len());
+        for &b in bytes {
+            s.push(match b {
+                0x80 => '\u{20AC}', 0x82 => '\u{201A}', 0x83 => '\u{0192}',
+                0x84 => '\u{201E}', 0x85 => '\u{2026}', 0x86 => '\u{2020}',
+                0x87 => '\u{2021}', 0x88 => '\u{02C6}', 0x89 => '\u{2030}',
+                0x8A => '\u{0160}', 0x8B => '\u{2039}', 0x8C => '\u{0152}',
+                0x8E => '\u{017D}', 0x91 => '\u{2018}', 0x92 => '\u{2019}',
+                0x93 => '\u{201C}', 0x94 => '\u{201D}', 0x95 => '\u{2022}',
+                0x96 => '\u{2013}', 0x97 => '\u{2014}', 0x98 => '\u{02DC}',
+                0x99 => '\u{2122}', 0x9A => '\u{0161}', 0x9B => '\u{203A}',
+                0x9C => '\u{0153}', 0x9E => '\u{017E}', 0x9F => '\u{0178}',
+                _ => b as char,
+            });
+        }
+        return s;
+    }
+    String::from_utf8_lossy(bytes).to_string()
+}
+
+/// Decode base64 content (kept for backward compat)
+fn decode_base64(input: &str) -> String {
+    let bytes = decode_base64_to_bytes(input);
+    String::from_utf8_lossy(&bytes).to_string()
 }
 
 /// Decode quoted-printable content
