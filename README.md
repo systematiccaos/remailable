@@ -23,8 +23,8 @@ The backend and frontend communicate over a SEQPACKET socket. No external web se
 
 ```
 ┌──────────────┐     SEQPACKET     ┌──────────────────┐
-│  QML frontend │ ◄──────────────► │  Rust backend     │
-│  (xochitl)    │                  │  (IMAP + SQLite)  │
+│ QML frontend │ ◄──────────────►  │   Rust backend   │
+│   (xochitl)  │                   │  (IMAP + SQLite) │
 └──────────────┘                   └──────────────────┘
 ```
 
