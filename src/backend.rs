@@ -993,6 +993,20 @@ fn sanitize_html(html: &str) -> String {
     let link_css_re = regex::Regex::new(r#"(?i)<link[^>]*stylesheet[^>]*>"#).unwrap();
     result = link_css_re.replace_all(&result, "").to_string();
     
+    // Inject inline styles for heading tags (Qt renders them unstyled otherwise)
+    let h1_re = regex::Regex::new(r"(?i)<(h1)([^>]*)").unwrap();
+    result = h1_re.replace_all(&result, r#"<$1$2 style="font-size:38px;font-weight:bold;margin:16px 0 8px 0;color:#111""#).to_string();
+    let h2_re = regex::Regex::new(r"(?i)<(h2)([^>]*)").unwrap();
+    result = h2_re.replace_all(&result, r#"<$1$2 style="font-size:32px;font-weight:bold;margin:14px 0 6px 0;color:#111""#).to_string();
+    let h3_re = regex::Regex::new(r"(?i)<(h3)([^>]*)").unwrap();
+    result = h3_re.replace_all(&result, r#"<$1$2 style="font-size:28px;font-weight:bold;margin:12px 0 6px 0;color:#111""#).to_string();
+    let h4_re = regex::Regex::new(r"(?i)<(h4)([^>]*)").unwrap();
+    result = h4_re.replace_all(&result, r#"<$1$2 style="font-size:24px;font-weight:bold;margin:10px 0 4px 0;color:#222""#).to_string();
+    let h5_re = regex::Regex::new(r"(?i)<(h5)([^>]*)").unwrap();
+    result = h5_re.replace_all(&result, r#"<$1$2 style="font-size:22px;font-weight:bold;margin:8px 0 4px 0;color:#222""#).to_string();
+    let h6_re = regex::Regex::new(r"(?i)<(h6)([^>]*)").unwrap();
+    result = h6_re.replace_all(&result, r#"<$1$2 style="font-size:20px;font-weight:bold;margin:8px 0 4px 0;color:#333""#).to_string();
+    
     let style_attr_re = regex::Regex::new(r#"(?i)\sstyle\s*=\s*"([^"]*)"|\sstyle\s*=\s*'([^']*)'"#).unwrap();
     result = style_attr_re.replace_all(&result, |caps: &regex::Captures| {
         let val = caps.get(1).or_else(|| caps.get(2)).map(|m| m.as_str()).unwrap_or("");
